@@ -113,6 +113,7 @@ Usar este globals.css
 }
 
 Si las fuentes no estan instaladas, deberas instalarlas para que el proyecto corra de manera visual correctamente.
+Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben ser compactas pero que no se superpongan los datos. Siempre se debe utilizar todo el ancho de la pantalla.
 
 ## Estado actual del proyecto
 
@@ -123,6 +124,11 @@ Si las fuentes no estan instaladas, deberas instalarlas para que el proyecto cor
 - La pagina inicial y `GET /api/health` verifican ambas conexiones en tiempo de ejecucion.
 - Las conexiones reutilizan pools globales para evitar aperturas innecesarias durante desarrollo y produccion.
 - Las variables de entorno privadas nunca deben usar el prefijo `NEXT_PUBLIC_`.
+- El navbar principal contiene el acceso al modulo Vendedores.
+- `GET /api/vendedores` y `/vendedores` consultan exclusivamente registros con `ven_estado = 1`.
+- El listado de vendedores pagina de a 50 registros y permite buscar por codigo, nombre o sucursal.
+- En el esquema SQL real, la relacion de sucursal es `vendedor.ven_sucur = sucursal.suc_codigo`.
+- La relacion se resuelve con `LEFT JOIN` porque existen vendedores activos sin sucursal asociada.
 
 ## Sistema visual del proyecto
 
@@ -133,3 +139,6 @@ Si las fuentes no estan instaladas, deberas instalarlas para que el proyecto cor
 - Bordes: radio base de 0.45rem y lineas finas con el token `--border`.
 - Sombras: suaves y de baja opacidad, reservadas para paneles principales.
 - Componentes: paneles compactos, etiquetas tecnicas y una linea de senal que vincula las fuentes.
+- Layout: navbar de ancho completo y contenido con padding reducido.
+- Inicio: dos lineas de estado centradas, sin bloques informativos adicionales.
+- Tablas: grillas operativas de ancho completo, filas compactas y scroll horizontal controlado en pantallas pequenas.

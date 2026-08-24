@@ -22,3 +22,11 @@ Para produccion, copiar `.env.example` como `.env.production`. Next.js reconoce 
 - MongoDB usa un pool reutilizable mediante Mongoose y tiene permisos de lectura y escritura.
 - SQL Server usa un pool reutilizable con intencion de solo lectura y el usuario `Consulta`.
 - `GET /api/health` devuelve el estado actual de ambas fuentes sin exponer credenciales ni direcciones de red.
+
+## Vendedores
+
+- La opcion `Vendedores` del navbar abre el listado de vendedores activos de SQL Server.
+- La tabla muestra codigo, nombre, sucursal y estado, con 50 registros por pagina.
+- El buscador filtra por codigo de vendedor, nombre o nombre de sucursal.
+- `GET /api/vendedores?page=1&q=texto` ofrece los mismos datos en formato JSON.
+- El esquema real utiliza `vendedor.ven_sucur = sucursal.suc_codigo`; se usa `LEFT JOIN` para conservar vendedores sin sucursal asociada.

@@ -5,6 +5,8 @@ import {
   Space_Grotesk,
 } from "next/font/google";
 
+import { Navbar } from "@/components/navbar";
+
 import "./globals.css";
 
 const bodyFont = IBM_Plex_Sans({
@@ -26,8 +28,8 @@ const dataFont = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Estado de conexiones | Intra PAM",
-  description: "Estado operativo de las fuentes de datos de Intra PAM.",
+  title: "Intra PAM",
+  description: "Analisis interno de fuentes de datos.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -36,7 +38,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="es"
       className={`${bodyFont.variable} ${displayFont.variable} ${dataFont.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <Navbar />
+        {children}
+      </body>
     </html>
   );
 }
