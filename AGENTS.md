@@ -259,4 +259,5 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - La tabla de asociación de orígenes permite filtrar la cola pendiente sin suborigen además de buscar por texto.
 - Produccion containerizada: Next.js debe compilar con `output: "standalone"` y publicarse como imagen en GHCR `ghcr.io/francocsanchez/intra-pam:latest`.
 - Portainer usa `docker-compose.yml` sin `build:` y con `container_name: intra-pam`, puerto externo fijo `32772` hacia el puerto interno `3000`.
+- En despliegues junto a Auth Central en Docker, el stack `intra-pam` debe unirse a la red Docker externa `internal-apps` y resolver `CENTRAL_AUTH_URL` por la URL interna `http://auth-central:3000`.
 - El despliegue productivo depende de variables `MONGODB_URI`, `CENTRAL_AUTH_URL`, `NEXT_PUBLIC_APP_URL`, `CENTRAL_APP_KEY`, `DBUSER_NIC`, `DBPASS_NIC`, `DBHOST_NIC`, `DATABASE_NIC`, `DBPORT_NIC`, `DB_CONNECTION_TIMEOUT_MS`, `SQL_ENCRYPT` y `SQL_TRUST_SERVER_CERTIFICATE`.

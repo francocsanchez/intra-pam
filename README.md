@@ -21,6 +21,7 @@ Para produccion, copiar `.env.example` como `.env.production`. Next.js reconoce 
 
 - El proyecto genera una imagen de produccion con `Dockerfile` multi-stage y `output: "standalone"` de Next.js.
 - El stack de Portainer usa la imagen publicada en GHCR y expone la app en `32772` hacia el puerto interno `3000`.
+- Para integrarse con Auth Central en Docker, este stack debe conectarse a la red externa compartida `internal-apps`.
 - La guia operativa completa de despliegue y actualizacion esta en `PRODUCCION.md`.
 
 ## Auth Central
@@ -46,6 +47,20 @@ Para produccion, copiar `.env.example` como `.env.production`. Next.js reconoce 
 4. Navegar a `http://localhost:3000` sin sesion y verificar la redireccion al login central.
 5. Probar un usuario con acceso denegado para confirmar la vista `403`.
 6. Probar un usuario con acceso habilitado para validar dashboard, modulos y logout central.
+
+### Produccion con Auth Central en red Docker compartida
+
+Usar esta configuracion cuando Auth Central corra en otro stack pero sobre la misma red Docker externa:
+
+```env
+CENTRAL_AUTH_URL=http://auth-central:3000
+NEXT_PUBLIC_APP_URL=http://192.168.100.31:32772
+CENTRAL_APP_KEY=<app-key-correspondiente>
+```
+
+- `CENTRAL_AUTH_URL` debe ser la URL interna del servicio `auth-central` en la red `internal-apps`.
+- `NEXT_PUBLIC_APP_URL` debe seguir siendo la URL publica real de este modulo.
+- La publicacion externa actual `32772:3000` no cambia.
 
 ## Conexiones
 

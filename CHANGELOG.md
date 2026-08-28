@@ -205,3 +205,7 @@
 - El selector de Vendedores permite reemplazar una asociacion existente con confirmacion previa y actualiza las oportunidades relacionadas.
 - El inicio fue reemplazado por el Dashboard y el navbar incorpora ese acceso como primer módulo.
 - El Dashboard separa métricas globales en una fila `1/3 + 2/3` y métricas filtradas en una fila de dos mitades.
+# 2026-08-28
+
+- Portainer y Docker: el stack `intra-pam` ahora se conecta a la red Docker externa `internal-apps` para consumir Auth Central por `http://auth-central:3000` sin cambiar la exposicion publica `32772:3000`.
+- Produccion: se documentaron en `PRODUCCION.md`, `README.md` y `.env.example` los valores recomendados de `CENTRAL_AUTH_URL`, `NEXT_PUBLIC_APP_URL` y `CENTRAL_APP_KEY` para despliegues compartiendo red con Auth Central.

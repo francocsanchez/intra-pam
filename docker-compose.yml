@@ -21,3 +21,9 @@ services:
       DB_CONNECTION_TIMEOUT_MS: ${DB_CONNECTION_TIMEOUT_MS:-5000}
       SQL_ENCRYPT: ${SQL_ENCRYPT:-false}
       SQL_TRUST_SERVER_CERTIFICATE: ${SQL_TRUST_SERVER_CERTIFICATE:-true}
+    networks:
+      - internal-apps
+
+networks:
+  internal-apps:
+    external: true
