@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { getCurrentCentralSession, getAppRole, hasAppAccess } from "@/lib/auth/central";
@@ -40,7 +39,7 @@ export default async function ForbiddenPage() {
             </div>
           </dl>
           <div className="auth-panel__actions">
-            <Link href="/logout">Cerrar sesion central</Link>
+            <a href="/logout">Cerrar sesion central</a>
           </div>
         </section>
       </main>
@@ -58,7 +57,7 @@ export default async function ForbiddenPage() {
           en el sistema central.
         </p>
         <div className="auth-panel__actions">
-          <Link href="/logout">Cerrar sesion central</Link>
+          <a href="/logout">Cerrar sesion central</a>
         </div>
       </section>
     </main>

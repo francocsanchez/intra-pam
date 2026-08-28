@@ -11,6 +11,7 @@
 ### Modificado
 
 - `.env.example` deja de incluir credenciales reales y ahora documenta solo las variables requeridas para despliegue.
+- Los enlaces de perfil y logout central ahora usan navegacion directa del navegador para evitar que Next intercepte el flujo y deje la sesion activa en Auth Central.
 
 ## 2026-08-27
 

@@ -131,6 +131,7 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - Si no hay sesion central valida, la app redirige a `{CENTRAL_AUTH_PUBLIC_URL}/login?appKey=...&returnTo=...`.
 - Si existe sesion central pero la aplicacion no tiene acceso habilitado, las vistas muestran `/forbidden` y las APIs responden `403`.
 - El logout local se expone en `GET /logout` y solo redirige al logout central con retorno a la raiz de la app.
+- Los accesos del navegador hacia perfil y logout central no deben usar navegacion interceptada por `next/link`; deben disparar una navegacion real del browser para permitir que Auth Central procese correctamente su sesion y cookies.
 - El navbar debe agrupar la navegación principal a la izquierda y exponer la cuenta como un dropdown `Mi Perfil`.
 - El dropdown `Mi Perfil` debe enlazar al perfil central (`/profile` en Auth Central), que es desde donde el usuario cambia password y gestiona su cuenta, además de ofrecer la salida por `/logout`.
 - El `RootLayout` debe actuar tambien como guard server-side de paginas solo para el caso sin sesion central valida; la decision de mandar a `/forbidden` queda centralizada en `middleware` para evitar loops de redireccion.

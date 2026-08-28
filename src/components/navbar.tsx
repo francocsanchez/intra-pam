@@ -197,18 +197,18 @@ export function Navbar({ profileUrl, user }: NavbarProps) {
                 : "Administra tu cuenta desde Auth Central"}
             </span>
           </div>
-          <Link className="navbar__menu-link" href={profileUrl} role="menuitem">
+          <a className="navbar__menu-link" href={profileUrl} role="menuitem">
             <UserRound aria-hidden="true" />
             Ver perfil
-          </Link>
-          <Link className="navbar__menu-link" href={profileUrl} role="menuitem">
+          </a>
+          <a className="navbar__menu-link" href={profileUrl} role="menuitem">
             <KeyRound aria-hidden="true" />
             Cambiar password
-          </Link>
-          <Link className="navbar__menu-link" href="/logout" role="menuitem">
+          </a>
+          <a className="navbar__menu-link" href="/logout" role="menuitem">
             <LogOut aria-hidden="true" />
             Cerrar sesion
-          </Link>
+          </a>
         </div>
       </details>
     </header>
