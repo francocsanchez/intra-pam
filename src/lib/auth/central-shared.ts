@@ -43,6 +43,7 @@ function required(name: string) {
 function getCentralAuthConfig() {
   return {
     authUrl: required("CENTRAL_AUTH_URL"),
+    authPublicUrl: required("CENTRAL_AUTH_PUBLIC_URL"),
     appUrl: required("NEXT_PUBLIC_APP_URL"),
     appKey: required("CENTRAL_APP_KEY"),
   };
@@ -70,23 +71,23 @@ export function getAppRole(session: CentralSession, appKey: string) {
 }
 
 export function buildCentralLoginUrl(returnTo: string) {
-  const { authUrl, appKey } = getCentralAuthConfig();
-  const url = new URL("/login", authUrl);
+  const { authPublicUrl, appKey } = getCentralAuthConfig();
+  const url = new URL("/login", authPublicUrl);
   url.searchParams.set("appKey", appKey);
   url.searchParams.set("returnTo", returnTo);
   return url.toString();
 }
 
 export function buildCentralLogoutUrl(returnTo: string) {
-  const { authUrl } = getCentralAuthConfig();
-  const url = new URL("/logout", authUrl);
+  const { authPublicUrl } = getCentralAuthConfig();
+  const url = new URL("/logout", authPublicUrl);
   url.searchParams.set("returnTo", returnTo);
   return url.toString();
 }
 
 export function buildCentralProfileUrl() {
-  const { authUrl } = getCentralAuthConfig();
-  return new URL("/profile", authUrl).toString();
+  const { authPublicUrl } = getCentralAuthConfig();
+  return new URL("/profile", authPublicUrl).toString();
 }
 
 export async function readCentralSession(

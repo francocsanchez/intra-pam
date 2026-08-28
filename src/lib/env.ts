@@ -91,6 +91,7 @@ export function getSqlServerConfig() {
 export function getCentralAuthConfig() {
   return {
     authUrl: required("CENTRAL_AUTH_URL"),
+    authPublicUrl: required("CENTRAL_AUTH_PUBLIC_URL"),
     appUrl: required("NEXT_PUBLIC_APP_URL"),
     appKey: required("CENTRAL_APP_KEY"),
   };

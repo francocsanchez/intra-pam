@@ -36,6 +36,7 @@ describe("central auth shared helpers", () => {
 
   function setEnv() {
     vi.stubEnv("CENTRAL_AUTH_URL", "http://localhost:3100");
+    vi.stubEnv("CENTRAL_AUTH_PUBLIC_URL", "http://localhost:3200");
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
     vi.stubEnv("CENTRAL_APP_KEY", "intra-pam");
   }
@@ -46,7 +47,7 @@ describe("central auth shared helpers", () => {
     expect(
       buildCentralLoginUrl("http://localhost:3000/oportunidades"),
     ).toBe(
-      "http://localhost:3100/login?appKey=intra-pam&returnTo=http%3A%2F%2Flocalhost%3A3000%2Foportunidades",
+      "http://localhost:3200/login?appKey=intra-pam&returnTo=http%3A%2F%2Flocalhost%3A3000%2Foportunidades",
     );
   });
 
@@ -56,7 +57,7 @@ describe("central auth shared helpers", () => {
     expect(
       buildCentralLogoutUrl("http://localhost:3000/"),
     ).toBe(
-      "http://localhost:3100/logout?returnTo=http%3A%2F%2Flocalhost%3A3000%2F",
+      "http://localhost:3200/logout?returnTo=http%3A%2F%2Flocalhost%3A3000%2F",
     );
   });
 

@@ -124,10 +124,11 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - `GET /api/health` verifica ambas conexiones en tiempo de ejecucion; la pagina inicial es el dashboard analítico.
 - Las conexiones reutilizan pools globales para evitar aperturas innecesarias durante desarrollo y produccion.
 - Las variables de entorno privadas nunca deben usar el prefijo `NEXT_PUBLIC_`.
-- Las variables de entorno requeridas para Auth Central son `CENTRAL_AUTH_URL`, `NEXT_PUBLIC_APP_URL` y `CENTRAL_APP_KEY`.
+- Las variables de entorno requeridas para Auth Central son `CENTRAL_AUTH_URL`, `CENTRAL_AUTH_PUBLIC_URL`, `NEXT_PUBLIC_APP_URL` y `CENTRAL_APP_KEY`.
+- Las redirecciones del navegador hacia Auth Central (`/login`, `/logout`, `/profile`) deben usar `CENTRAL_AUTH_PUBLIC_URL`, mientras la consulta server-to-server sigue usando `CENTRAL_AUTH_URL`.
 - La consulta de sesion central se hace exclusivamente por `GET {CENTRAL_AUTH_URL}/api/internal/session?appKey={CENTRAL_APP_KEY}` reenviando la `cookie` original del request.
 - Toda la app y todas las rutas `src/app/api/*`, incluyendo `GET /api/health`, quedan protegidas por `middleware`; solo se excluyen assets internos de Next, `favicon` y la ruta local `/logout`.
-- Si no hay sesion central valida, la app redirige a `{CENTRAL_AUTH_URL}/login?appKey=...&returnTo=...`.
+- Si no hay sesion central valida, la app redirige a `{CENTRAL_AUTH_PUBLIC_URL}/login?appKey=...&returnTo=...`.
 - Si existe sesion central pero la aplicacion no tiene acceso habilitado, las vistas muestran `/forbidden` y las APIs responden `403`.
 - El logout local se expone en `GET /logout` y solo redirige al logout central con retorno a la raiz de la app.
 - El navbar debe agrupar la navegación principal a la izquierda y exponer la cuenta como un dropdown `Mi Perfil`.
@@ -259,5 +260,5 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - La tabla de asociación de orígenes permite filtrar la cola pendiente sin suborigen además de buscar por texto.
 - Produccion containerizada: Next.js debe compilar con `output: "standalone"` y publicarse como imagen en GHCR `ghcr.io/francocsanchez/intra-pam:latest`.
 - Portainer usa `docker-compose.yml` sin `build:` y con `container_name: intra-pam`, puerto externo fijo `32772` hacia el puerto interno `3000`.
-- En despliegues junto a Auth Central en Docker, el stack `intra-pam` debe unirse a la red Docker externa `internal-apps` y resolver `CENTRAL_AUTH_URL` por la URL interna `http://auth-central:3000`.
-- El despliegue productivo depende de variables `MONGODB_URI`, `CENTRAL_AUTH_URL`, `NEXT_PUBLIC_APP_URL`, `CENTRAL_APP_KEY`, `DBUSER_NIC`, `DBPASS_NIC`, `DBHOST_NIC`, `DATABASE_NIC`, `DBPORT_NIC`, `DB_CONNECTION_TIMEOUT_MS`, `SQL_ENCRYPT` y `SQL_TRUST_SERVER_CERTIFICATE`.
+- En despliegues junto a Auth Central en Docker, el stack `intra-pam` debe unirse a la red Docker externa `internal-apps`, resolver `CENTRAL_AUTH_URL` por `http://auth-central:3000` y usar `CENTRAL_AUTH_PUBLIC_URL` con la URL publica real de Auth Central.
+- El despliegue productivo depende de variables `MONGODB_URI`, `CENTRAL_AUTH_URL`, `CENTRAL_AUTH_PUBLIC_URL`, `NEXT_PUBLIC_APP_URL`, `CENTRAL_APP_KEY`, `DBUSER_NIC`, `DBPASS_NIC`, `DBHOST_NIC`, `DATABASE_NIC`, `DBPORT_NIC`, `DB_CONNECTION_TIMEOUT_MS`, `SQL_ENCRYPT` y `SQL_TRUST_SERVER_CERTIFICATE`.

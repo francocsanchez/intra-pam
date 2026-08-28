@@ -29,9 +29,11 @@ Para produccion, copiar `.env.example` como `.env.production`. Next.js reconoce 
 - La aplicacion ahora delega autenticacion, sesiones, acceso por aplicacion y logout en Auth Central.
 - Variables requeridas:
   - `CENTRAL_AUTH_URL`
+  - `CENTRAL_AUTH_PUBLIC_URL`
   - `NEXT_PUBLIC_APP_URL`
   - `CENTRAL_APP_KEY`
 - La validacion de sesion se realiza server-to-server contra `GET {CENTRAL_AUTH_URL}/api/internal/session?appKey={CENTRAL_APP_KEY}` reenviando la `cookie` del request actual.
+- Las redirecciones del navegador a login, logout y perfil central se construyen con `CENTRAL_AUTH_PUBLIC_URL`.
 - Si no hay sesion central valida, cualquier pagina o API del modulo redirige al login central.
 - Si existe sesion pero la app no tiene acceso habilitado, las vistas muestran `/forbidden` y las APIs responden `403`.
 - `GET /logout` redirige al logout central y vuelve a la raiz de la app.
@@ -41,6 +43,7 @@ Para produccion, copiar `.env.example` como `.env.production`. Next.js reconoce 
 1. Levantar Auth Central en otro puerto, por ejemplo `http://localhost:3100`.
 2. Configurar en `.env.local`:
    - `CENTRAL_AUTH_URL=http://localhost:3100`
+   - `CENTRAL_AUTH_PUBLIC_URL=http://localhost:3100`
    - `NEXT_PUBLIC_APP_URL=http://localhost:3000`
    - `CENTRAL_APP_KEY=REEMPLAZAR_CON_EL_KEY_DE_ESTA_APP`
 3. Ejecutar `npm run dev`.
@@ -54,11 +57,13 @@ Usar esta configuracion cuando Auth Central corra en otro stack pero sobre la mi
 
 ```env
 CENTRAL_AUTH_URL=http://auth-central:3000
+CENTRAL_AUTH_PUBLIC_URL=http://192.168.100.31:32770
 NEXT_PUBLIC_APP_URL=http://192.168.100.31:32772
 CENTRAL_APP_KEY=<app-key-correspondiente>
 ```
 
 - `CENTRAL_AUTH_URL` debe ser la URL interna del servicio `auth-central` en la red `internal-apps`.
+- `CENTRAL_AUTH_PUBLIC_URL` debe ser la URL publica real de Auth Central para que el navegador pueda abrir login, logout y perfil.
 - `NEXT_PUBLIC_APP_URL` debe seguir siendo la URL publica real de este modulo.
 - La publicacion externa actual `32772:3000` no cambia.
 

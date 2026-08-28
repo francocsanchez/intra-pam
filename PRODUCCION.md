@@ -16,6 +16,7 @@
 
 - `MONGODB_URI`
 - `CENTRAL_AUTH_URL`
+- `CENTRAL_AUTH_PUBLIC_URL`
 - `NEXT_PUBLIC_APP_URL`
 - `CENTRAL_APP_KEY`
 - `DBUSER_NIC`
@@ -31,11 +32,13 @@
 
 ```env
 CENTRAL_AUTH_URL=http://auth-central:3000
+CENTRAL_AUTH_PUBLIC_URL=http://192.168.100.31:32770
 NEXT_PUBLIC_APP_URL=http://192.168.100.31:32772
 CENTRAL_APP_KEY=<app-key-correspondiente>
 ```
 
 - `CENTRAL_AUTH_URL` debe resolverse por la red Docker compartida `internal-apps`; no usar la URL publica `http://192.168.100.31:32770` para la comunicacion interna entre contenedores.
+- `CENTRAL_AUTH_PUBLIC_URL` debe apuntar a la URL publica de Auth Central para las redirecciones del navegador.
 - `NEXT_PUBLIC_APP_URL` debe apuntar a la URL publica real de la app, incluyendo el puerto `32772` si no hay proxy inverso delante.
 - `CENTRAL_APP_KEY` debe coincidir con la clave habilitada para esta app dentro de Auth Central.
 
@@ -78,6 +81,7 @@ services:
       PORT: 3000
       MONGODB_URI: ${MONGODB_URI}
       CENTRAL_AUTH_URL: ${CENTRAL_AUTH_URL}
+      CENTRAL_AUTH_PUBLIC_URL: ${CENTRAL_AUTH_PUBLIC_URL}
       NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
       CENTRAL_APP_KEY: ${CENTRAL_APP_KEY}
       DBUSER_NIC: ${DBUSER_NIC}

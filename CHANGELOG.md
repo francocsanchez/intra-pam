@@ -209,3 +209,4 @@
 
 - Portainer y Docker: el stack `intra-pam` ahora se conecta a la red Docker externa `internal-apps` para consumir Auth Central por `http://auth-central:3000` sin cambiar la exposicion publica `32772:3000`.
 - Produccion: se documentaron en `PRODUCCION.md`, `README.md` y `.env.example` los valores recomendados de `CENTRAL_AUTH_URL`, `NEXT_PUBLIC_APP_URL` y `CENTRAL_APP_KEY` para despliegues compartiendo red con Auth Central.
+- Auth Central: se separo `CENTRAL_AUTH_PUBLIC_URL` para que login, logout y perfil usen la URL publica del servicio, mientras `CENTRAL_AUTH_URL` queda reservado para la comunicacion interna entre contenedores.

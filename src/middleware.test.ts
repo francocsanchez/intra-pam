@@ -28,6 +28,7 @@ describe("auth middleware", () => {
 
   function setEnv() {
     vi.stubEnv("CENTRAL_AUTH_URL", "http://localhost:3100");
+    vi.stubEnv("CENTRAL_AUTH_PUBLIC_URL", "http://localhost:3200");
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
     vi.stubEnv("CENTRAL_APP_KEY", "intra-pam");
   }
@@ -40,7 +41,7 @@ describe("auth middleware", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3100/login?appKey=intra-pam&returnTo=http%3A%2F%2Flocalhost%3A3000%2Foportunidades",
+      "http://localhost:3200/login?appKey=intra-pam&returnTo=http%3A%2F%2Flocalhost%3A3000%2Foportunidades",
     );
   });
 
