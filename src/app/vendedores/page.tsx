@@ -2,6 +2,8 @@ import { ChevronLeft, ChevronRight, Search } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
 
+import { OwnerAssignmentSelect } from "@/components/owner-assignment-select";
+import { getOpportunityOwners } from "@/lib/oportunidades";
 import { getVendedoresActivos } from "@/lib/vendedores";
 
 type VendedoresPageProps = {
@@ -33,10 +35,10 @@ export default async function VendedoresPage({
   const params = await searchParams;
   const requestedPage = Number(firstValue(params.page)) || 1;
   const search = firstValue(params.q);
-  const result = await getVendedoresActivos({
-    page: requestedPage,
-    search,
-  });
+  const [result, owners] = await Promise.all([
+    getVendedoresActivos({ page: requestedPage, search }),
+    getOpportunityOwners(),
+  ]);
 
   const { page, pageSize, total, totalPages } = result.pagination;
   const firstRecord = total === 0 ? 0 : (page - 1) * pageSize + 1;
@@ -75,6 +77,7 @@ export default async function VendedoresPage({
                 <th scope="col">Codigo</th>
                 <th scope="col">Vendedor</th>
                 <th scope="col">Sucursal</th>
+                <th scope="col">Propietario de oportunidad</th>
                 <th scope="col">Estado</th>
               </tr>
             </thead>
@@ -92,6 +95,13 @@ export default async function VendedoresPage({
                         #{seller.sucursalCodigo}
                       </span>
                     )}
+                  </td>
+                  <td>
+                    <OwnerAssignmentSelect
+                      sellerCode={seller.codigo}
+                      currentOwner={seller.propietarioOportunidad}
+                      owners={owners}
+                    />
                   </td>
                   <td>
                     <span className="active-state">

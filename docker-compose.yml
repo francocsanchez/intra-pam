@@ -1,0 +1,23 @@
+services:
+  intra-pam:
+    image: ghcr.io/francocsanchez/intra-pam:latest
+    container_name: intra-pam
+    restart: unless-stopped
+    ports:
+      - "32772:3000"
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+      MONGODB_URI: ${MONGODB_URI}
+      CENTRAL_AUTH_URL: ${CENTRAL_AUTH_URL}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL}
+      CENTRAL_APP_KEY: ${CENTRAL_APP_KEY}
+      DBUSER_NIC: ${DBUSER_NIC}
+      DBPASS_NIC: ${DBPASS_NIC}
+      DBHOST_NIC: ${DBHOST_NIC}
+      DBPORT_NIC: ${DBPORT_NIC:-1433}
+      DATABASE_NIC: ${DATABASE_NIC}
+      DB_CONNECTION_TIMEOUT_MS: ${DB_CONNECTION_TIMEOUT_MS:-5000}
+      SQL_ENCRYPT: ${SQL_ENCRYPT:-false}
+      SQL_TRUST_SERVER_CERTIFICATE: ${SQL_TRUST_SERVER_CERTIFICATE:-true}

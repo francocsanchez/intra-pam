@@ -1,5 +1,28 @@
 import "server-only";
 
+function withMongoBooleanParam(uri: string, key: string, value: boolean) {
+  const normalizedKey = key.toLowerCase();
+
+  if (!uri.includes("://")) {
+    return uri;
+  }
+
+  const [base, hash = ""] = uri.split("#", 2);
+  const [path, query = ""] = base.split("?", 2);
+  const params = new URLSearchParams(query);
+  const hasParam = [...params.keys()].some(
+    (item) => item.toLowerCase() === normalizedKey,
+  );
+
+  if (!hasParam) {
+    params.set(key, value ? "true" : "false");
+  }
+
+  const nextQuery = params.toString();
+  const nextBase = nextQuery ? `${path}?${nextQuery}` : path;
+  return hash ? `${nextBase}#${hash}` : nextBase;
+}
+
 function required(name: string): string {
   const value = process.env[name]?.trim();
 
@@ -41,8 +64,10 @@ function booleanValue(name: string, fallback: boolean): boolean {
 }
 
 export function getMongoConfig() {
+  const uri = withMongoBooleanParam(required("MONGODB_URI"), "retryWrites", false);
+
   return {
-    uri: required("MONGODB_URI"),
+    uri,
     timeoutMs: positiveInteger("DB_CONNECTION_TIMEOUT_MS", 5000),
   };
 }
@@ -60,5 +85,13 @@ export function getSqlServerConfig() {
       "SQL_TRUST_SERVER_CERTIFICATE",
       true,
     ),
+  };
+}
+
+export function getCentralAuthConfig() {
+  return {
+    authUrl: required("CENTRAL_AUTH_URL"),
+    appUrl: required("NEXT_PUBLIC_APP_URL"),
+    appKey: required("CENTRAL_APP_KEY"),
   };
 }

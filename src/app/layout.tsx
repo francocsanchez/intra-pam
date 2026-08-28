@@ -1,45 +1,57 @@
 import type { Metadata } from "next";
-import {
-  IBM_Plex_Mono,
-  IBM_Plex_Sans,
-  Space_Grotesk,
-} from "next/font/google";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 import { Navbar } from "@/components/navbar";
+import {
+  buildCentralLoginUrl,
+  buildCentralProfileUrl,
+  getCurrentCentralSession,
+  getAppRole,
+} from "@/lib/auth/central";
+import { getCentralAuthConfig } from "@/lib/env";
 
 import "./globals.css";
-
-const bodyFont = IBM_Plex_Sans({
-  variable: "--font-body",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const displayFont = Space_Grotesk({
-  variable: "--font-display",
-  subsets: ["latin"],
-  weight: ["500", "600"],
-});
-
-const dataFont = IBM_Plex_Mono({
-  variable: "--font-data",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
 
 export const metadata: Metadata = {
   title: "Intra PAM",
   description: "Analisis interno de fuentes de datos.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default async function RootLayout({ children }: LayoutProps<"/">) {
+  const requestHeaders = await headers();
+  const sessionState = await getCurrentCentralSession();
+
+  if (sessionState.status === "unauthenticated") {
+    const origin = requestHeaders.get("origin")
+      ?? process.env.NEXT_PUBLIC_APP_URL?.trim()
+      ?? "http://localhost:3000";
+    const pathname = requestHeaders.get("x-pathname") ?? "/";
+    redirect(buildCentralLoginUrl(new URL(pathname, origin).toString()));
+  }
+
+  const authenticatedSession = sessionState.status === "authenticated"
+    ? sessionState.session
+    : null;
+  const role = authenticatedSession
+    ? getAppRole(authenticatedSession, getCentralAuthConfig().appKey)
+    : null;
+
   return (
-    <html
-      lang="es"
-      className={`${bodyFont.variable} ${displayFont.variable} ${dataFont.variable}`}
-    >
-      <body>
-        <Navbar />
+    <html lang="es">
+      <body suppressHydrationWarning>
+        <Navbar
+          profileUrl={buildCentralProfileUrl()}
+          user={
+            authenticatedSession
+              ? {
+                name: authenticatedSession.user.name,
+                email: authenticatedSession.user.email,
+                role,
+              }
+              : null
+          }
+        />
         {children}
       </body>
     </html>

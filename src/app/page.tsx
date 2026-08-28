@@ -1,29 +1,16 @@
 import { connection } from "next/server";
 
-import { getDatabaseHealth } from "@/lib/database-health";
+import { OpportunityDashboard } from "@/components/opportunity-dashboard";
+import { getOpportunityDashboard } from "@/lib/oportunidades";
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: PageProps<"/">) {
   await connection();
-  const health = await getDatabaseHealth();
-
-  return (
-    <main className="status-home" aria-label="Estado de las conexiones">
-      <div className="connection-lines">
-        {health.services.map((service) => (
-          <div
-            className="connection-line"
-            data-connected={service.connected ? "true" : "false"}
-            key={service.id}
-          >
-            <span>{service.name}</span>
-            <span className="connection-line__rail" aria-hidden="true" />
-            <span className="connection-line__dot" aria-hidden="true" />
-            <span className="sr-only">
-              {service.connected ? "Conexion correcta" : "Conexion no disponible"}
-            </span>
-          </div>
-        ))}
-      </div>
-    </main>
+  const { periodo } = await searchParams;
+  const dashboard = await getOpportunityDashboard(
+    typeof periodo === "string" ? periodo : null,
   );
+
+  return <OpportunityDashboard initialData={dashboard} />;
 }

@@ -1,5 +1,6 @@
 import "server-only";
 
+import { getSellerOwnerMappings } from "@/lib/asociaciones";
 import { getSqlConnection } from "@/lib/sqlserver";
 
 export const VENDEDORES_PAGE_SIZE = 50;
@@ -9,6 +10,7 @@ export type Vendedor = {
   nombre: string;
   sucursalCodigo: number | null;
   sucursalNombre: string | null;
+  propietarioOportunidad: string | null;
 };
 
 export type VendedoresResult = {
@@ -92,12 +94,17 @@ export async function getVendedoresActivos({
       OFFSET @offset ROWS FETCH NEXT @pageSize ROWS ONLY
     `);
 
+  const ownerMappings = await getSellerOwnerMappings(
+    sellersResult.recordset.map((row) => row.codigo),
+  );
+
   return {
     data: sellersResult.recordset.map((row) => ({
       codigo: row.codigo,
       nombre: row.nombre ?? "Sin nombre",
       sucursalCodigo: row.sucursalCodigo,
       sucursalNombre: row.sucursalNombre,
+      propietarioOportunidad: ownerMappings.get(row.codigo) ?? null,
     })),
     pagination: {
       page: normalizedPage,
