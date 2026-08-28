@@ -39,7 +39,9 @@ export default async function ForbiddenPage() {
             </div>
           </dl>
           <div className="auth-panel__actions">
-            <a href="/logout">Cerrar sesion central</a>
+            <form action="/logout" method="post">
+              <button type="submit">Cerrar sesion central</button>
+            </form>
           </div>
         </section>
       </main>
@@ -57,7 +59,9 @@ export default async function ForbiddenPage() {
           en el sistema central.
         </p>
         <div className="auth-panel__actions">
-          <a href="/logout">Cerrar sesion central</a>
+          <form action="/logout" method="post">
+            <button type="submit">Cerrar sesion central</button>
+          </form>
         </div>
       </section>
     </main>

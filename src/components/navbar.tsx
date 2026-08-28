@@ -205,10 +205,12 @@ export function Navbar({ profileUrl, user }: NavbarProps) {
             <KeyRound aria-hidden="true" />
             Cambiar password
           </a>
-          <a className="navbar__menu-link" href="/logout" role="menuitem">
-            <LogOut aria-hidden="true" />
-            Cerrar sesion
-          </a>
+          <form action="/logout" method="post">
+            <button className="navbar__menu-link" type="submit" role="menuitem">
+              <LogOut aria-hidden="true" />
+              Cerrar sesion
+            </button>
+          </form>
         </div>
       </details>
     </header>
