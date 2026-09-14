@@ -186,7 +186,7 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - Cada registro manual de `pre_leads_mensuales` guarda `total`, `presupuesto` y `gasto` para la misma combinación `periodo + tipoRegistro + suborigen`.
 - El modelo Mongoose de `pre_leads_mensuales` debe actualizar el esquema cacheado durante hot reload para no perder campos nuevos como `presupuesto` y `gasto`.
 - `GET /api/rendimiento?periodo=YYYY-MM&suborigen=...` cruza pre leads manuales con oportunidades creadas en el mes por `tipoRegistro`, filtrando únicamente propietarios clasificados como `Vendedor` y, cuando aplica, por el `suborigen` seleccionado.
-- En Rendimiento, `Leads` cuenta oportunidades del período, `Ventas` cuenta las etapas de venta configuradas, `Tasa de conversión` es leads dividido pre leads, `Tasa de cierre` es ventas dividido leads y `Tasa de pre leads` es ventas dividido pre leads.
+- En Rendimiento, `Leads` cuenta oportunidades creadas en el período y `Ventas` cuenta las etapas de venta configuradas cerradas en el período por `fechaCierre` UTC; `Tasa de conversión` es leads dividido pre leads, `Tasa de cierre` es ventas dividido leads y `Tasa de pre leads` es ventas dividido pre leads.
 - En Rendimiento, `Costo por venta` es `gasto / ventas`, y la comparativa mensual usa la variación porcentual contra el costo por venta del mes anterior para el mismo `tipoRegistro`.
 - `GET /api/dashboard/oportunidades?periodo=YYYY-MM` entrega las métricas mensuales por etapa y propietario basadas exclusivamente en `fechaCreacion` UTC y filtradas a propietarios clasificados como `Vendedor`.
 - Las lecturas de gráficos de Dashboard y Rendimiento ya no agregan en vivo desde las colecciones base; consumen snapshots de `dashboard_oportunidades_totalizadas` y `rendimiento_totalizado`.
@@ -253,9 +253,13 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - Rendimiento: la barra superior expone un filtro opcional por `suborigen` a la izquierda del selector mensual.
 - Rendimiento: los embudos comparativos deben escalar el ancho de cada negocio contra el mayor volumen del período, evitando normalizar cada tarjeta por separado.
 - Rendimiento: la referencia de ancho del embudo debe salir sólo de los negocios visibles; no usar el total general consolidado como máximo, y conservar siempre el orden visual `Pre Leads`, `Leads`, `Ventas`.
+- Rendimiento: los gráficos por negocio deben mostrarse siempre en este orden: `Planes`, `Convencional`, `Usados`; los demás negocios se ordenan alfabéticamente a continuación.
+- Rendimiento: la comparación por negocio muestra los títulos de indicadores en una columna fija a la izquierda y alinea en la misma fila los valores de todos los negocios, especialmente las tasas de conversión y de cierre.
 - PAM Resumen: layout full-width y compacto, con una fila superior para la línea anual y una fila inferior `1/3 + 2/3` para pie mensual y tabla comercial.
 - PAM Resumen: compactar padding del panel de distribución y la altura de filas de la tabla comercial para reducir aire vacío junto al bloque de conversión.
+- PAM Resumen: la tabla `Leads y ventas por suborigen y negocio` debe usar padding mínimo por celda y filas compactas, incluidos encabezados, subtotales y total general.
 - PAM Resumen: el gráfico mensual de oportunidades debe estirarse verticalmente hasta el fondo del panel cuando comparta fila con la tabla de conversión.
+- PAM Resumen: el gráfico `Oportunidades por tipo de registro` debe tomar exactamente el alto útil de la tabla `Leads y ventas por suborigen y negocio`, sin excederlo.
 - PAM Tasas de cierre: layout full-width con filtros superiores, resumen consolidado compacto y un gráfico comparativo por propietario como panel principal.
 - PAM Participación Digital: layout full-width con selector mensual, resumen anual compacto y gráfico principal combinado de barras más línea porcentual.
 - PAM Resumen: los paneles contiguos del bloque mensual deben quedar alineados en borde superior y separación, sin desfases verticales entre gráfico y tabla.

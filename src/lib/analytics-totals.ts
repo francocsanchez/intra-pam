@@ -39,7 +39,7 @@ import { PreLeadMensual } from "../models/pre-lead-mensual";
 import { RendimientoTotalizado } from "../models/rendimiento-totalizado";
 
 const ANALYTICS_TOTALS_SOURCE = "analytics-totals-v1";
-const ANALYTICS_TOTALS_VERSION = 8;
+const ANALYTICS_TOTALS_VERSION = 9;
 
 type DashboardAggregate = {
   conversion: Array<{
@@ -761,6 +761,9 @@ async function buildPerformanceSnapshots() {
     ...opportunityRows
       .map((item) => item._id.suborigen)
       .filter((value) => value && value !== EMPTY_SUBORIGIN_LABEL),
+    ...summarySalesRows
+      .map((item) => item._id.suborigen)
+      .filter((value) => value && value !== EMPTY_SUBORIGIN_LABEL),
     ...manualRows
       .map((item) => item._id.suborigen)
       .filter((value) => value && value !== EMPTY_SUBORIGIN_LABEL),
@@ -778,6 +781,23 @@ async function buildPerformanceSnapshots() {
       const byType = opportunityByPeriod.get(periodKey) ?? new Map();
       const current = byType.get(item._id.tipoRegistro) ?? { leads: 0, ventas: 0 };
       current.leads += item.leads;
+      byType.set(item._id.tipoRegistro, current);
+      opportunityByPeriod.set(periodKey, byType);
+      const periods = opportunityPeriodsByFilter.get(scopeKey) ?? new Set<string>();
+      periods.add(item._id.periodo);
+      opportunityPeriodsByFilter.set(scopeKey, periods);
+    }
+  }
+
+  // Rendimiento mide el ingreso del lead por fecha de creación y la venta por fecha de cierre.
+  for (const item of summarySalesRows) {
+    const filterKeys = [null, item._id.suborigen];
+
+    for (const filterKey of filterKeys) {
+      const scopeKey = filterKey ?? "__all__";
+      const periodKey = `${scopeKey}::${item._id.periodo}`;
+      const byType = opportunityByPeriod.get(periodKey) ?? new Map();
+      const current = byType.get(item._id.tipoRegistro) ?? { leads: 0, ventas: 0 };
       current.ventas += item.ventas;
       byType.set(item._id.tipoRegistro, current);
       opportunityByPeriod.set(periodKey, byType);

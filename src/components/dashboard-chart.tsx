@@ -870,12 +870,14 @@ type PamRegistryStackedBarChartProps = {
   ariaLabel: string;
   data: DashboardMetric[];
   emptyMessage?: string;
+  height?: number;
 };
 
 export function PamRegistryStackedBarChart({
   ariaLabel,
   data,
   emptyMessage = "No hay oportunidades para este período",
+  height,
 }: PamRegistryStackedBarChartProps) {
   const chartElement = useRef<HTMLDivElement>(null);
 
@@ -1024,6 +1026,7 @@ export function PamRegistryStackedBarChart({
     <div
       ref={chartElement}
       className="dashboard-chart dashboard-chart--pam-breakdown"
+      style={{ height: height ? `${height}px` : 0 }}
       role="img"
       aria-label={ariaLabel}
     />

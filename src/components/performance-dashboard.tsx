@@ -30,6 +30,24 @@ const currencyFormatter = new Intl.NumberFormat("es-AR", {
 });
 
 const FUNNEL_COLORS = ["#7ecb63", "#ff4d4f", "#ff9f43", "#7a7a7a", "#58a6a6", "#c9856b"];
+const PRIORITY_BUSINESS_ORDER = ["planes", "convencional", "usados"];
+
+function normalizeBusinessName(value: string) {
+  return value
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase("es-AR");
+}
+
+function compareBusinesses(left: PerformanceDashboardData["negocios"][number], right: PerformanceDashboardData["negocios"][number]) {
+  const leftPriority = PRIORITY_BUSINESS_ORDER.indexOf(normalizeBusinessName(left.tipoRegistro));
+  const rightPriority = PRIORITY_BUSINESS_ORDER.indexOf(normalizeBusinessName(right.tipoRegistro));
+  const leftOrder = leftPriority === -1 ? PRIORITY_BUSINESS_ORDER.length : leftPriority;
+  const rightOrder = rightPriority === -1 ? PRIORITY_BUSINESS_ORDER.length : rightPriority;
+
+  return leftOrder - rightOrder || left.tipoRegistro.localeCompare(right.tipoRegistro, "es");
+}
 
 function formatPeriod(period: string | null) {
   if (!period) return "Sin período disponible";
@@ -73,14 +91,15 @@ export function PerformanceDashboard({ initialData }: Props) {
   const [dashboard, setDashboard] = useState(initialData);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const orderedBusinesses = [...dashboard.negocios].sort(compareBusinesses);
   const funnelMaxValue = (() => {
-    const maxPreLeads = Math.max(...dashboard.negocios.map((metric) => metric.preLeads), 0);
+    const maxPreLeads = Math.max(...orderedBusinesses.map((metric) => metric.preLeads), 0);
     if (maxPreLeads > 0) return maxPreLeads;
 
-    const maxLeads = Math.max(...dashboard.negocios.map((metric) => metric.leads), 0);
+    const maxLeads = Math.max(...orderedBusinesses.map((metric) => metric.leads), 0);
     if (maxLeads > 0) return maxLeads;
 
-    return Math.max(...dashboard.negocios.map((metric) => metric.ventas), 1);
+    return Math.max(...orderedBusinesses.map((metric) => metric.ventas), 1);
   })();
 
   function applyFilters(period: string, suborigen: string) {
@@ -228,48 +247,55 @@ export function PerformanceDashboard({ initialData }: Props) {
         </article>
       </section>
 
-      {dashboard.negocios.length ? (
-        <section className="performance-grid" aria-label="Funnels por unidad de negocio">
-          {dashboard.negocios.map((metric, index) => (
-            <article key={metric.tipoRegistro} className="dashboard-panel performance-card">
-              <header className="performance-card__heading">
-                <span
-                  className="performance-card__badge"
-                  style={{ color: FUNNEL_COLORS[index % FUNNEL_COLORS.length], borderColor: FUNNEL_COLORS[index % FUNNEL_COLORS.length] }}
-                >
-                  {metric.tipoRegistro}
-                </span>
-              </header>
-
-              <PerformanceFunnelChart
-                ariaLabel={`Funnel de ${metric.tipoRegistro}: ${metric.preLeads} pre leads, ${metric.leads} leads y ${metric.ventas} ventas`}
-                color={FUNNEL_COLORS[index % FUNNEL_COLORS.length]}
-                maxValue={funnelMaxValue}
-                metric={metric}
-              />
-
-              <div className="performance-card__stats">
-                <div><span>Pre Leads</span><strong>{metric.preLeads}</strong></div>
-                <div><span>Leads</span><strong>{metric.leads}</strong></div>
-                <div><span>Tasa conversión</span><strong>{rateFormatter.format(metric.tasaConversion)}</strong></div>
-                <div><span>Ventas</span><strong>{metric.ventas}</strong></div>
-                <div><span>Tasa cierre</span><strong>{rateFormatter.format(metric.tasaCierre)}</strong></div>
-                <div><span>Tasa pre leads</span><strong>{rateFormatter.format(metric.tasaPreLeads)}</strong></div>
-                <div><span>Presupuesto</span><strong>{formatMoney(metric.presupuesto)}</strong></div>
-                <div><span>Gasto</span><strong>{formatMoney(metric.gasto)}</strong></div>
-                <div><span>Costo por venta</span><strong>{formatMoney(metric.costoPorVenta)}</strong></div>
-                <div className="performance-card__comparison">
-                  <span>Vs mes anterior</span>
-                  <strong>{renderVariation(metric.variacionCostoPorVenta)}</strong>
-                  <small>
-                    {metric.periodoAnterior && metric.costoPorVentaAnterior !== null
-                      ? `${formatPeriod(metric.periodoAnterior)} · ${formatMoney(metric.costoPorVentaAnterior)}`
-                      : "Sin referencia"}
-                  </small>
-                </div>
+      {orderedBusinesses.length ? (
+        <section className="dashboard-panel performance-comparison" aria-label="Comparación de funnels por unidad de negocio">
+          <div className="performance-comparison__scroll">
+            <div
+              className="performance-comparison__grid"
+              style={{ gridTemplateColumns: `9.5rem repeat(${orderedBusinesses.length}, minmax(11rem, 1fr))` }}
+            >
+              <div className="performance-comparison__labels" aria-hidden="true">
+                <span>Indicadores</span>
+                <span>Pre leads · Leads · Ventas</span>
+                <span>Tasa de conversión</span>
+                <span>Tasa de cierre</span>
+                <span>Tasa de pre leads</span>
+                <span>Presupuesto</span>
+                <span>Gasto</span>
+                <span>Costo por venta</span>
+                <span>Vs. mes anterior</span>
               </div>
-            </article>
-          ))}
+
+              {orderedBusinesses.map((metric, index) => (
+                <article key={metric.tipoRegistro} className="performance-comparison__column">
+                  <header>
+                    <span
+                      className="performance-card__badge"
+                      style={{ color: FUNNEL_COLORS[index % FUNNEL_COLORS.length], borderColor: FUNNEL_COLORS[index % FUNNEL_COLORS.length] }}
+                    >
+                      {metric.tipoRegistro}
+                    </span>
+                  </header>
+                  <PerformanceFunnelChart
+                    ariaLabel={`Funnel de ${metric.tipoRegistro}: ${metric.preLeads} pre leads, ${metric.leads} leads y ${metric.ventas} ventas`}
+                    color={FUNNEL_COLORS[index % FUNNEL_COLORS.length]}
+                    maxValue={funnelMaxValue}
+                    metric={metric}
+                  />
+                  <strong>{rateFormatter.format(metric.tasaConversion)}</strong>
+                  <strong>{rateFormatter.format(metric.tasaCierre)}</strong>
+                  <strong>{rateFormatter.format(metric.tasaPreLeads)}</strong>
+                  <strong>{formatMoney(metric.presupuesto)}</strong>
+                  <strong>{formatMoney(metric.gasto)}</strong>
+                  <strong>{formatMoney(metric.costoPorVenta)}</strong>
+                  <div className="performance-comparison__variation">
+                    <strong>{renderVariation(metric.variacionCostoPorVenta)}</strong>
+                    <small>{metric.periodoAnterior && metric.costoPorVentaAnterior !== null ? `${formatPeriod(metric.periodoAnterior)} · ${formatMoney(metric.costoPorVentaAnterior)}` : "Sin referencia"}</small>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
         </section>
       ) : (
         <section className="dashboard-empty performance-empty">

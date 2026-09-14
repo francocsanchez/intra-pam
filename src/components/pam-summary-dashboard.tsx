@@ -1,7 +1,7 @@
 "use client";
 
 import { CalendarDays, ChevronDown, FileBarChart2, LoaderCircle } from "lucide-react";
-import { Fragment, useState, useTransition } from "react";
+import { Fragment, useLayoutEffect, useRef, useState, useTransition } from "react";
 
 import {
   PamAnnualPreLeadChart,
@@ -39,6 +39,8 @@ export function PamSummaryDashboard({ initialData }: Props) {
   const [dashboard, setDashboard] = useState(initialData);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const conversionPanelRef = useRef<HTMLElement>(null);
+  const [breakdownHeight, setBreakdownHeight] = useState(0);
   const availableSuborigins = dashboard.suborigenes;
   const selectedSuborigins = dashboard.suborigenesSeleccionados;
   const conversionGroups = [...dashboard.conversionMensual.reduce(
@@ -58,6 +60,21 @@ export function PamSummaryDashboard({ initialData }: Props) {
     { leads: 0, ventas: 0 },
   );
   const monthlyTotal = dashboard.tiposRegistroMensual.reduce((total, item) => total + item.total, 0);
+
+  useLayoutEffect(() => {
+    const panel = conversionPanelRef.current;
+    if (!panel) return;
+
+    const updateBreakdownHeight = () => {
+      const header = panel.querySelector<HTMLElement>(".dashboard-panel__heading");
+      setBreakdownHeight(Math.max(0, panel.offsetHeight - (header?.offsetHeight ?? 0)));
+    };
+
+    const observer = new ResizeObserver(updateBreakdownHeight);
+    observer.observe(panel);
+    updateBreakdownHeight();
+    return () => observer.disconnect();
+  }, [dashboard.conversionMensual]);
 
   function toggleSuborigin(suborigin: string) {
     const nextSuborigins = selectedSuborigins.includes(suborigin)
@@ -182,10 +199,11 @@ export function PamSummaryDashboard({ initialData }: Props) {
             ariaLabel="Gráfico de barras apiladas mensual de oportunidades por tipo de registro"
             data={dashboard.tiposRegistroMensual}
             emptyMessage="No hay oportunidades para este período"
+            height={breakdownHeight}
           />
         </article>
 
-        <article className="dashboard-panel dashboard-conversion pam-summary-conversion">
+        <article ref={conversionPanelRef} className="dashboard-panel dashboard-conversion pam-summary-conversion">
           <header className="dashboard-panel__heading">
             <div>
               <span>Conversión mensual</span>

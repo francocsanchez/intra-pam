@@ -549,6 +549,103 @@
   gap: 0.7rem;
 }
 
+.performance-comparison {
+  margin-top: 0.7rem;
+}
+
+.performance-comparison__scroll {
+  overflow-x: auto;
+}
+
+.performance-comparison__grid {
+  display: grid;
+  min-width: 43rem;
+}
+
+.performance-comparison__labels,
+.performance-comparison__column {
+  display: grid;
+  grid-template-rows: 3rem 17rem repeat(6, 2.1rem) minmax(3.4rem, auto);
+}
+
+.performance-comparison__labels {
+  background: var(--secondary);
+  border-right: 1px solid var(--border);
+}
+
+.performance-comparison__labels > span {
+  display: flex;
+  align-items: center;
+  padding-inline: 0.65rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--muted-foreground);
+  font-family: var(--font-data), sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1.15;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.performance-comparison__labels > span:first-child {
+  color: var(--foreground);
+}
+
+.performance-comparison__column {
+  min-width: 0;
+  border-right: 1px solid var(--border);
+  text-align: center;
+}
+
+.performance-comparison__column:last-child {
+  border-right: 0;
+}
+
+.performance-comparison__column > header,
+.performance-comparison__column > strong,
+.performance-comparison__variation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding-inline: 0.55rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.performance-comparison__column > header {
+  background: var(--background);
+}
+
+.performance-comparison__column > strong {
+  font-family: var(--font-display), sans-serif;
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.performance-comparison__column > .performance-funnel-chart {
+  height: 17rem;
+  padding: 0.35rem 0.15rem 0;
+}
+
+.performance-comparison__variation {
+  display: grid;
+  align-content: center;
+  gap: 0.12rem;
+}
+
+.performance-comparison__variation > strong {
+  display: flex;
+  justify-content: center;
+}
+
+.performance-comparison__variation small {
+  color: var(--muted-foreground);
+  font-family: var(--font-data), sans-serif;
+  font-size: 0.52rem;
+  line-height: 1.15;
+}
+
 .performance-card {
   display: grid;
   grid-template-rows: auto auto 1fr;
@@ -857,6 +954,7 @@
 
 .dashboard-grid--pam-secondary {
   grid-template-columns: minmax(18rem, 1fr) minmax(0, 2fr);
+  align-items: start;
 }
 
 .dashboard-panel {
@@ -1104,9 +1202,7 @@
 }
 
 .pam-summary-panel .dashboard-chart--pam-breakdown {
-  flex: 1;
   min-height: 0;
-  height: 100%;
 }
 
 .pam-summary-conversion {
@@ -1115,12 +1211,15 @@
 
 .pam-summary-conversion .dashboard-conversion__table th,
 .pam-summary-conversion .dashboard-conversion__table td {
-  height: 2.05rem;
-  padding-inline: 0.6rem;
+  height: 1.65rem;
+  padding: 0.14rem 0.35rem;
   font-size: 0.66rem;
+  line-height: 1.1;
 }
 
 .pam-summary-conversion .dashboard-conversion__table thead th {
+  height: 1.5rem;
+  padding-block: 0.12rem;
   font-size: 0.53rem;
 }
 
