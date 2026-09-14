@@ -143,7 +143,7 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - `GET /api/vendedores/{codigo}/analisis?periodo=YYYY-MM` consulta SQL Server en modo lectura, valida que el vendedor siga activo y cuenta todas las operaciones de `dbo.opera`.
 - El tablero de vendedor muestra la sucursal vigente del maestro `vendedor`, serie anual completa, radar mensual por familia de auto y una serie diaria que incluye días sin operaciones.
 - El bloque anual del tablero de vendedor combina la línea mensual con un gráfico de árbol que desglosa las operaciones anuales por familia y modelo de auto; etiqueta cada nodo como `familia: cantidad` o `modelo: cantidad`.
-- La línea anual del tablero de vendedor agrega barras de oportunidades y tasa de cierre por mes: toma el propietario asociado vigente, cuenta oportunidades por `fechaCreacion` UTC y considera ventas a las etapas `Venta` o `Venta plan`.
+- La línea anual del tablero de vendedor agrega barras de oportunidades y tasa de cierre por mes: toma el propietario asociado vigente, cuenta oportunidades por `fechaCreacion` UTC y considera venta las etapas `Venta`, `Venta plan`, `Agrupamiento`, `Control de documentación` y `Cerrada ganada`.
 - Todas las consultas del tablero de vendedor excluyen operaciones anuladas mediante `opera.ope_fecbaj IS NULL`; la familia se resuelve con `auto.au_familia = famiauto.fam_codigo`.
 - El listado de vendedores pagina de a 50 registros y permite buscar por codigo, nombre o sucursal.
 - En el esquema SQL real, la relacion de sucursal es `vendedor.ven_sucur = sucursal.suc_codigo`.
@@ -186,7 +186,7 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - Cada registro manual de `pre_leads_mensuales` guarda `total`, `presupuesto` y `gasto` para la misma combinación `periodo + tipoRegistro + suborigen`.
 - El modelo Mongoose de `pre_leads_mensuales` debe actualizar el esquema cacheado durante hot reload para no perder campos nuevos como `presupuesto` y `gasto`.
 - `GET /api/rendimiento?periodo=YYYY-MM&suborigen=...` cruza pre leads manuales con oportunidades creadas en el mes por `tipoRegistro`, filtrando únicamente propietarios clasificados como `Vendedor` y, cuando aplica, por el `suborigen` seleccionado.
-- En Rendimiento, `Leads` cuenta oportunidades del período, `Ventas` cuenta etapas `Venta` o `Venta plan`, `Tasa de conversión` es leads dividido pre leads, `Tasa de cierre` es ventas dividido leads y `Tasa de pre leads` es ventas dividido pre leads.
+- En Rendimiento, `Leads` cuenta oportunidades del período, `Ventas` cuenta las etapas de venta configuradas, `Tasa de conversión` es leads dividido pre leads, `Tasa de cierre` es ventas dividido leads y `Tasa de pre leads` es ventas dividido pre leads.
 - En Rendimiento, `Costo por venta` es `gasto / ventas`, y la comparativa mensual usa la variación porcentual contra el costo por venta del mes anterior para el mismo `tipoRegistro`.
 - `GET /api/dashboard/oportunidades?periodo=YYYY-MM` entrega las métricas mensuales por etapa y propietario basadas exclusivamente en `fechaCreacion` UTC y filtradas a propietarios clasificados como `Vendedor`.
 - Las lecturas de gráficos de Dashboard y Rendimiento ya no agregan en vivo desde las colecciones base; consumen snapshots de `dashboard_oportunidades_totalizadas` y `rendimiento_totalizado`.
@@ -214,7 +214,7 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - El Dashboard muestra un pie global por `tipoRegistro`; los vacíos se agrupan como `Sin tipo de registro`.
 - El Dashboard muestra un pie global de colaboración: `colaborador: true` se cuenta como `Colaboradas`, mientras `false` y `null` se agrupan como `No colaboradas`.
 - El gráfico histórico mensual agrega una línea por cada `tipoRegistro`, además de las barras abiertas/cerradas y la línea total.
-- El Dashboard incluye una tabla del período activo por suborigen y `tipoRegistro`; leads cuenta oportunidades, ventas cuenta etapas `Venta` o `Venta plan`, y la tasa es ventas dividido leads.
+- El Dashboard incluye una tabla del período activo por suborigen y `tipoRegistro`; leads cuenta oportunidades, ventas cuenta las etapas de venta configuradas, y la tasa es ventas dividido leads.
 - `GET /api/resumen?periodo=YYYY-MM` entrega la vista `Resumen` de PAM usando snapshots totalizados, con selector mensual independiente.
 - `GET /api/participacion-digital?periodo=YYYY-MM` entrega la vista `Participación Digital` de PAM usando snapshots totalizados.
 - `GET /api/tasas-cierre?periodo=YYYY-MM&tipoRegistro=...&suborigen=...` entrega la vista `Tasas de cierre` de PAM usando snapshots totalizados por propietario.
@@ -229,6 +229,8 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - En `PAM > Resumen`, la barra apilada mensual debe ocupar aproximadamente el 80% del ancho útil del gráfico y priorizar una paleta con contraste claro entre tipos de registro.
 - En `PAM > Resumen`, cuando se muestren pocos tipos de registro en simultáneo, la asignación de color debe evitar tonos vecinos o demasiado parecidos dentro de la misma barra visible.
 - En `PAM > Resumen`, la tabla mensual muestra leads y ventas por `suborigen` y `tipoRegistro`, con subtotales y total general.
+- En la tabla mensual de `PAM > Resumen`, `Leads` corresponde a oportunidades creadas en el período y `Ventas` a oportunidades en una etapa de venta configurada cerradas en el período según `fechaCierre` UTC.
+- Las etapas de venta configuradas son `Venta`, `Venta plan`, `Agrupamiento`, `Control de documentación` y `Cerrada ganada`; esta definición es única para todos los tableros y totalizadoras.
 - En `PAM > Participación Digital`, el gráfico anualizado compara la participación por `tipoRegistro`; cada serie usa la tasa `ventas colaboradas / ventas totales` del mismo negocio para cada mes del año seleccionado.
 - En `PAM > Participación Digital`, las etiquetas y tooltips del gráfico deben mostrar porcentajes explícitos, no ratios decimales crudos.
 - En `PAM > Tasas de cierre`, la tasa por propietario se calcula como `ventas / oportunidades`, filtrable por mes, `tipoRegistro` y `suborigen`.

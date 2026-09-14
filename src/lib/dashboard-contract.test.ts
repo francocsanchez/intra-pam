@@ -77,8 +77,11 @@ describe("dashboard de oportunidades", () => {
   it("calcula ventas y tasa de conversion para la tabla comercial", () => {
     expect(isSaleOpportunityStage("Venta")).toBe(true);
     expect(isSaleOpportunityStage("  VENTA PLAN ")).toBe(true);
+    expect(isSaleOpportunityStage("Agrupamiento")).toBe(true);
+    expect(isSaleOpportunityStage("Control de documentación")).toBe(true);
+    expect(isSaleOpportunityStage("Cerrada ganada")).toBe(true);
     expect(isSaleOpportunityStage("Venta convencional")).toBe(false);
-    expect(isSaleOpportunityStage("Cerrada ganada")).toBe(false);
+    expect(isSaleOpportunityStage("Cerrada perdida")).toBe(false);
     expect(getLeadConversionRate(25, 5)).toBe(0.2);
     expect(getLeadConversionRate(0, 0)).toBe(0);
   });

@@ -2,6 +2,7 @@ import "server-only";
 
 import { getMongoConnection } from "@/lib/mongodb";
 import { getSqlConnection } from "@/lib/sqlserver";
+import { SALE_OPPORTUNITY_STAGE_PATTERN } from "@/lib/dashboard-contract";
 import {
   fillAnnualClosingRateSeries,
   fillAnnualOperationSeries,
@@ -65,7 +66,7 @@ async function getAnnualClosingRateSeries(sellerCode: number, yearStart: Date, y
         esVenta: {
           $regexMatch: {
             input: { $trim: { input: { $ifNull: ["$etapa", ""] } } },
-            regex: "^venta(\\s+plan)?$",
+            regex: SALE_OPPORTUNITY_STAGE_PATTERN.source,
             options: "i",
           },
         },

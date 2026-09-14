@@ -5,6 +5,7 @@ import {
   getCollaborationMetrics,
   getDashboardPeriodRange,
   isDashboardPeriod,
+  SALE_OPPORTUNITY_STAGE_PATTERN,
   type OpportunityDashboard,
 } from "./dashboard-contract";
 import { getMongoConnection } from "./mongodb";
@@ -38,7 +39,7 @@ import { PreLeadMensual } from "../models/pre-lead-mensual";
 import { RendimientoTotalizado } from "../models/rendimiento-totalizado";
 
 const ANALYTICS_TOTALS_SOURCE = "analytics-totals-v1";
-const ANALYTICS_TOTALS_VERSION = 6;
+const ANALYTICS_TOTALS_VERSION = 8;
 
 type DashboardAggregate = {
   conversion: Array<{
@@ -494,7 +495,7 @@ async function buildDashboardSnapshots() {
             dashboardVenta: {
               $regexMatch: {
                 input: { $trim: { input: { $ifNull: ["$etapa", ""] } } },
-                regex: "^venta(\\s+plan)?$",
+                regex: SALE_OPPORTUNITY_STAGE_PATTERN.source,
                 options: "i",
               },
             },
@@ -572,7 +573,7 @@ async function buildDashboardSnapshots() {
 
 async function buildPerformanceSnapshots() {
   const analyticsMatch = await getSellerOwnerAnalyticsMatch();
-  const [suboriginCatalog, opportunityRows, manualRows, digitalRows] = await Promise.all([
+  const [suboriginCatalog, opportunityRows, summarySalesRows, manualRows, digitalRows] = await Promise.all([
     getSuborigenes(),
     Oportunidad.aggregate<OpportunityPerformanceRow>([
       { $match: analyticsMatch },
@@ -604,7 +605,7 @@ async function buildPerformanceSnapshots() {
           dashboardVenta: {
             $regexMatch: {
               input: { $trim: { input: { $ifNull: ["$etapa", ""] } } },
-              regex: "^venta(\\s+plan)?$",
+                regex: SALE_OPPORTUNITY_STAGE_PATTERN.source,
               options: "i",
             },
           },
@@ -619,6 +620,55 @@ async function buildPerformanceSnapshots() {
           },
           leads: { $sum: 1 },
           ventas: { $sum: { $cond: ["$dashboardVenta", 1, 0] } },
+        },
+      },
+    ]),
+    Oportunidad.aggregate<OpportunityPerformanceRow>([
+      { $match: analyticsMatch },
+      { $match: { fechaCierre: { $type: "date" } } },
+      ...buildSuboriginResolutionStages(),
+      {
+        $set: {
+          dashboardPeriodo: {
+            $dateToString: {
+              date: "$fechaCierre",
+              format: "%Y-%m",
+              timezone: "UTC",
+            },
+          },
+          dashboardTipoRegistro: {
+            $let: {
+              vars: {
+                value: { $trim: { input: { $ifNull: ["$tipoRegistro", ""] } } },
+              },
+              in: {
+                $cond: [
+                  { $eq: ["$$value", ""] },
+                  EMPTY_REGISTRY_TYPE_LABEL,
+                  "$$value",
+                ],
+              },
+            },
+          },
+          dashboardVenta: {
+            $regexMatch: {
+              input: { $trim: { input: { $ifNull: ["$etapa", ""] } } },
+                regex: SALE_OPPORTUNITY_STAGE_PATTERN.source,
+              options: "i",
+            },
+          },
+        },
+      },
+      { $match: { dashboardVenta: true } },
+      {
+        $group: {
+          _id: {
+            periodo: "$dashboardPeriodo",
+            suborigen: "$dashboardSuborigen",
+            tipoRegistro: "$dashboardTipoRegistro",
+          },
+          leads: { $sum: 0 },
+          ventas: { $sum: 1 },
         },
       },
     ]),
@@ -667,7 +717,7 @@ async function buildPerformanceSnapshots() {
               {
                 $regexMatch: {
                   input: { $trim: { input: { $ifNull: ["$etapa", ""] } } },
-                  regex: "^venta(\\s+plan)?$",
+                  regex: SALE_OPPORTUNITY_STAGE_PATTERN.source,
                   options: "i",
                 },
               },
@@ -688,7 +738,7 @@ async function buildPerformanceSnapshots() {
                 {
                   $regexMatch: {
                     input: { $trim: { input: { $ifNull: ["$etapa", ""] } } },
-                    regex: "^venta(\\s+plan)?$",
+                  regex: SALE_OPPORTUNITY_STAGE_PATTERN.source,
                     options: "i",
                   },
                 },
@@ -903,20 +953,28 @@ async function buildPerformanceSnapshots() {
     }
   }
 
-  const conversionRowsByScopeAndPeriod = new Map<string, PamConversionMetric[]>();
+  const conversionRowsByScopeAndPeriod = new Map<string, Map<string, PamConversionMetric>>();
 
   for (const item of opportunityRows) {
-    const row = {
-      suborigen: item._id.suborigen,
-      tipoRegistro: item._id.tipoRegistro,
-      leads: item.leads,
-      ventas: item.ventas,
-    };
-
     const scopes = [`__all__::${item._id.periodo}`, `${item._id.suborigen}::${item._id.periodo}`];
     for (const scope of scopes) {
-      const rows = conversionRowsByScopeAndPeriod.get(scope) ?? [];
-      rows.push(row);
+      const rows = conversionRowsByScopeAndPeriod.get(scope) ?? new Map<string, PamConversionMetric>();
+      const key = `${item._id.suborigen}::${item._id.tipoRegistro}`;
+      const row = rows.get(key) ?? { suborigen: item._id.suborigen, tipoRegistro: item._id.tipoRegistro, leads: 0, ventas: 0 };
+      row.leads += item.leads;
+      rows.set(key, row);
+      conversionRowsByScopeAndPeriod.set(scope, rows);
+    }
+  }
+
+  for (const item of summarySalesRows) {
+    const scopes = [`__all__::${item._id.periodo}`, `${item._id.suborigen}::${item._id.periodo}`];
+    for (const scope of scopes) {
+      const rows = conversionRowsByScopeAndPeriod.get(scope) ?? new Map<string, PamConversionMetric>();
+      const key = `${item._id.suborigen}::${item._id.tipoRegistro}`;
+      const row = rows.get(key) ?? { suborigen: item._id.suborigen, tipoRegistro: item._id.tipoRegistro, leads: 0, ventas: 0 };
+      row.ventas += item.ventas;
+      rows.set(key, row);
       conversionRowsByScopeAndPeriod.set(scope, rows);
     }
   }
@@ -982,7 +1040,7 @@ async function buildPerformanceSnapshots() {
       .map(([nombre, totals]) => ({ nombre, total: totals.leads }))
       .sort((left, right) => right.total - left.total || left.nombre.localeCompare(right.nombre, "es"));
 
-    const conversionMensual = (conversionRowsByScopeAndPeriod.get(`${scopeKey}::${snapshot.periodo}`) ?? [])
+    const conversionMensual = [...(conversionRowsByScopeAndPeriod.get(`${scopeKey}::${snapshot.periodo}`)?.values() ?? [])]
       .sort((left, right) =>
         left.suborigen.localeCompare(right.suborigen, "es") ||
         left.tipoRegistro.localeCompare(right.tipoRegistro, "es"),
@@ -1077,7 +1135,7 @@ async function buildClosingRateSnapshots() {
           dashboardVenta: {
             $regexMatch: {
               input: { $trim: { input: { $ifNull: ["$etapa", ""] } } },
-              regex: "^venta(\\s+plan)?$",
+                regex: SALE_OPPORTUNITY_STAGE_PATTERN.source,
               options: "i",
             },
           },

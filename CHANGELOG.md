@@ -5,6 +5,8 @@
 ### Modificado
 
 - `PAM > Resumen` ahora concentra el filtro multiselección de suborígenes junto al mes de referencia. El filtro actualiza la tendencia anual de pre leads, la distribución mensual y la tabla de leads y ventas de toda la vista.
+- En la tabla `Leads y ventas por suborigen y negocio` de `PAM > Resumen`, los leads se mantienen por fecha de creación y las ventas se contabilizan por fecha de cierre del mes seleccionado.
+- Se amplía la definición compartida de venta: además de `Venta` y `Venta plan`, ahora incluye `Agrupamiento`, `Control de documentación` y `Cerrada ganada` en todos los tableros y totalizadoras.
 
 ## 2026-08-31
 

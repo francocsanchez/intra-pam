@@ -44,7 +44,7 @@ export type OpportunityDashboard = {
 };
 
 export const OPEN_OPPORTUNITY_STAGE_PATTERN = /^(negociaci[oó]n|inicial)$/i;
-export const SALE_OPPORTUNITY_STAGE_PATTERN = /^venta(?:\s+plan)?$/i;
+export const SALE_OPPORTUNITY_STAGE_PATTERN = /^(?:venta(?:\s+plan)?|agrupamiento|control\s+de\s+documentaci[oó]n|cerrada\s+ganada)$/i;
 
 export function isOpenOpportunityStage(value: string | null | undefined) {
   return OPEN_OPPORTUNITY_STAGE_PATTERN.test(value?.trim() ?? "");

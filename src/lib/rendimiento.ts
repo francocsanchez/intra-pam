@@ -285,7 +285,9 @@ export async function getPamSummaryDashboard(
   requestedPeriod?: string | null,
   requestedSuborigins?: string[] | null,
 ): Promise<PamSummaryDashboard> {
-  return readPamSummarySnapshot(requestedPeriod, requestedSuborigins);
+  return requestedSuborigins === undefined
+    ? readPamSummarySnapshot(requestedPeriod)
+    : readPamSummarySnapshot(requestedPeriod, requestedSuborigins);
 }
 
 export async function getDigitalParticipationDashboard(
