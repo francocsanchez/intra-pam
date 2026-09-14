@@ -14,6 +14,13 @@ import type {
   PamDigitalParticipationPoint,
   PerformanceMetric,
 } from "@/lib/rendimiento-contract";
+import type {
+  VendorAnalysisPoint,
+  VendorClosingRatePoint,
+  VendorDailyOperationPoint,
+  VendorFamilyMetric,
+  VendorFamilyTreeMetric,
+} from "@/lib/vendedor-analisis-contract";
 
 const TYPE_REGISTRY_COLORS = [
   "#1f6f5f",
@@ -550,6 +557,313 @@ export function DashboardCategoryPieChart({
       aria-label={ariaLabel}
     />
   );
+}
+
+type VendorOperationsLineChartProps = {
+  ariaLabel: string;
+  data: VendorAnalysisPoint[] | VendorDailyOperationPoint[];
+  emptyMessage: string;
+  labelFormatter: (point: VendorAnalysisPoint | VendorDailyOperationPoint) => string;
+  closingRates?: VendorClosingRatePoint[];
+};
+
+export function VendorOperationsLineChart({
+  ariaLabel,
+  data,
+  emptyMessage,
+  labelFormatter,
+  closingRates,
+}: VendorOperationsLineChartProps) {
+  const chartElement = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = chartElement.current;
+    if (!element) return;
+
+    const chart = echarts.init(element, undefined, { renderer: "svg" });
+    const hasValues = data.some((point) => point.total > 0) || closingRates?.some((point) => point.oportunidades > 0);
+    const rateByPeriod = new Map(closingRates?.map((point) => [point.periodo, point]));
+    const usesClosingRate = Boolean(closingRates);
+
+    chart.setOption({
+      animationDuration: 480,
+      animationEasing: "cubicOut",
+      grid: { top: usesClosingRate ? 48 : 24, right: usesClosingRate ? 48 : 26, bottom: 28, left: 12, containLabel: true },
+      legend: usesClosingRate
+        ? { top: 6, right: 12, itemWidth: 12, itemHeight: 8, textStyle: { color: "#525252", fontSize: 10 } }
+        : undefined,
+      tooltip: {
+        trigger: "axis",
+        axisPointer: { type: "line", lineStyle: { color: "#a3a3a3" } },
+        formatter: (params: echarts.TooltipComponentFormatterCallbackParams) => {
+          const rows = Array.isArray(params) ? params : [params];
+          const details = rows.map((point) => {
+            const value = Number(point.value ?? 0);
+            const formatted = point.seriesName === "Tasa de cierre"
+              ? `${(value * 100).toFixed(2).replace(".", ",")}%`
+              : String(value);
+            return `${point.marker} ${point.seriesName}: <strong>${formatted}</strong>`;
+          }).join("<br />");
+          return `${rows[0]?.name ?? ""}<br />${details}`;
+        },
+      },
+      xAxis: {
+        type: "category",
+        boundaryGap: usesClosingRate,
+        data: data.map(labelFormatter),
+        axisTick: { show: false },
+        axisLine: { lineStyle: { color: "#d4d4d4" } },
+        axisLabel: { color: "#737373", fontSize: 10, hideOverlap: true },
+      },
+      yAxis: usesClosingRate
+        ? [
+            {
+              type: "value",
+              minInterval: 1,
+              splitLine: { lineStyle: { color: "#e7e7e7" } },
+              axisLabel: { color: "#737373", fontSize: 10 },
+            },
+            {
+              type: "value",
+              min: 0,
+              max: 1,
+              splitLine: { show: false },
+              axisLabel: { color: "#737373", fontSize: 10, formatter: (value: number) => `${(value * 100).toFixed(0)}%` },
+            },
+          ]
+        : {
+            type: "value",
+            minInterval: 1,
+            splitLine: { lineStyle: { color: "#e7e7e7" } },
+            axisLabel: { color: "#737373", fontSize: 10 },
+          },
+      series: [
+        ...(usesClosingRate ? [{
+          name: "Oportunidades",
+          type: "bar" as const,
+          data: data.map((point) => rateByPeriod.get("periodo" in point ? point.periodo : "")?.oportunidades ?? 0),
+          barMaxWidth: 18,
+          itemStyle: { color: "#2f5f9e", borderRadius: [3, 3, 0, 0] },
+        }] : []),
+        {
+          name: "Operaciones",
+          type: "line",
+          data: data.map((point) => point.total),
+          smooth: 0.15,
+          symbol: "circle",
+          symbolSize: 7,
+          lineStyle: { width: 3, color: "#1f6f5f" },
+          itemStyle: { color: "#1f6f5f", borderColor: "#ffffff", borderWidth: 2 },
+          areaStyle: { color: "rgba(31,111,95,0.12)" },
+        },
+        ...(usesClosingRate ? [{
+          name: "Tasa de cierre",
+          type: "line" as const,
+          yAxisIndex: 1,
+          data: data.map((point) => rateByPeriod.get("periodo" in point ? point.periodo : "")?.tasaCierre ?? 0),
+          smooth: 0.15,
+          symbol: "circle",
+          symbolSize: 7,
+          lineStyle: { width: 3, color: "#c46b1f" },
+          itemStyle: { color: "#c46b1f", borderColor: "#ffffff", borderWidth: 2 },
+          label: {
+            show: true,
+            position: "top",
+            distance: 6,
+            color: "#404040",
+            fontFamily: "Nunito Sans, sans-serif",
+            fontSize: 9,
+            formatter: ({ value }: { value?: number }) => `${(Number(value ?? 0) * 100).toFixed(2).replace(".", ",")}%`,
+          },
+          labelLayout: { hideOverlap: true, moveOverlap: "shiftY" },
+        }] : []),
+      ],
+      graphic: hasValues
+        ? undefined
+        : {
+            type: "text",
+            left: "center",
+            top: "middle",
+            style: { text: emptyMessage, fill: "#737373", fontSize: 12 },
+          },
+    });
+
+    const observer = new ResizeObserver(() => chart.resize());
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+      chart.dispose();
+    };
+  }, [closingRates, data, emptyMessage, labelFormatter]);
+
+  return <div ref={chartElement} className="dashboard-chart vendor-analysis-chart" role="img" aria-label={ariaLabel} />;
+}
+
+type VendorFamiliesRadarChartProps = {
+  ariaLabel: string;
+  data: VendorFamilyMetric[];
+};
+
+export function VendorFamiliesRadarChart({ ariaLabel, data }: VendorFamiliesRadarChartProps) {
+  const chartElement = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = chartElement.current;
+    if (!element) return;
+
+    const chart = echarts.init(element, undefined, { renderer: "svg" });
+    const hasValues = data.some((item) => item.total > 0);
+
+    chart.setOption({
+      animationDuration: 480,
+      animationEasing: "cubicOut",
+      tooltip: {
+        trigger: "item",
+        formatter: (params: { value?: number[] }) => data
+          .map((item, index) => `${item.familia}: <strong>${params.value?.[index] ?? 0}</strong>`)
+          .join("<br />"),
+      },
+      series: [
+        {
+          type: "radar",
+          data: [{ value: data.map((item) => item.total), name: "Operaciones" }],
+          symbol: "circle",
+          symbolSize: 6,
+          lineStyle: { width: 2.5, color: "#1f6f5f" },
+          itemStyle: { color: "#1f6f5f" },
+          areaStyle: { color: "rgba(31,111,95,0.2)" },
+        },
+      ],
+      radar: {
+        center: ["50%", "50%"],
+        radius: "65%",
+        splitNumber: 4,
+        axisName: { color: "#525252", fontSize: 10 },
+        splitLine: { lineStyle: { color: "#dcdcdc" } },
+        splitArea: { areaStyle: { color: ["rgba(31,111,95,0.025)", "rgba(31,111,95,0.06)"] } },
+        axisLine: { lineStyle: { color: "#d4d4d4" } },
+        indicator: data.map((item) => ({
+          name: item.familia,
+          max: Math.max(...data.map((metric) => metric.total), 1),
+        })),
+      },
+      graphic: hasValues
+        ? undefined
+        : {
+            type: "text",
+            left: "center",
+            top: "middle",
+            style: { text: "No hay operaciones para el mes seleccionado", fill: "#737373", fontSize: 12 },
+          },
+    });
+
+    const observer = new ResizeObserver(() => chart.resize());
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+      chart.dispose();
+    };
+  }, [data]);
+
+  return <div ref={chartElement} className="dashboard-chart vendor-analysis-chart" role="img" aria-label={ariaLabel} />;
+}
+
+type VendorFamiliesTreeChartProps = {
+  ariaLabel: string;
+  data: VendorFamilyTreeMetric[];
+};
+
+export function VendorFamiliesTreeChart({ ariaLabel, data }: VendorFamiliesTreeChartProps) {
+  const chartElement = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const element = chartElement.current;
+    if (!element) return;
+
+    const chart = echarts.init(element, undefined, { renderer: "svg" });
+    const total = data.reduce((sum, item) => sum + item.total, 0);
+
+    chart.setOption({
+      animationDuration: 520,
+      animationEasing: "cubicOut",
+      tooltip: {
+        trigger: "item",
+        formatter: (params: { data?: { familia?: string; modelo?: string; total?: number } }) => {
+          const model = params.data?.modelo;
+          const family = params.data?.familia;
+          if (model) return `${model}: <strong>${params.data?.total ?? 0}</strong> operaciones`;
+          return family ? `${family}: <strong>${params.data?.total ?? 0}</strong> operaciones` : "Operaciones del año";
+        },
+      },
+      series: [
+        {
+          type: "tree",
+          data: [{
+            name: "Operaciones",
+            total,
+            children: data.map((item) => ({
+              name: `${item.familia}: ${item.total}`,
+              familia: item.familia,
+              total: item.total,
+              children: item.modelos.map((model) => ({
+                name: `${model.modelo}: ${model.total}`,
+                modelo: model.modelo,
+                total: model.total,
+              })),
+            })),
+          }],
+          top: "8%",
+          left: "12%",
+          bottom: "8%",
+          right: "28%",
+          symbol: "circle",
+          symbolSize: 8,
+          orient: "LR",
+          edgeShape: "polyline",
+          edgeForkPosition: "60%",
+          lineStyle: { color: "#a6c9c1", width: 1.25 },
+          itemStyle: { color: "#1f6f5f", borderColor: "#ffffff", borderWidth: 1.5 },
+          label: {
+            position: "right",
+            verticalAlign: "middle",
+            align: "left",
+            color: "#404040",
+            fontFamily: "Nunito Sans, sans-serif",
+            fontSize: 10,
+          },
+          leaves: {
+            label: {
+              position: "right",
+              verticalAlign: "middle",
+              align: "left",
+            },
+          },
+          expandAndCollapse: false,
+          initialTreeDepth: 3,
+        },
+      ],
+      graphic: data.length
+        ? undefined
+        : {
+            type: "text",
+            left: "center",
+            top: "middle",
+            style: { text: "No hay operaciones para el año seleccionado", fill: "#737373", fontSize: 12 },
+          },
+    });
+
+    const observer = new ResizeObserver(() => chart.resize());
+    observer.observe(element);
+
+    return () => {
+      observer.disconnect();
+      chart.dispose();
+    };
+  }, [data]);
+
+  return <div ref={chartElement} className="dashboard-chart vendor-analysis-chart" role="img" aria-label={ariaLabel} />;
 }
 
 type PamRegistryStackedBarChartProps = {

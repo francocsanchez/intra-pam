@@ -39,10 +39,8 @@ export function PamSummaryDashboard({ initialData }: Props) {
   const [dashboard, setDashboard] = useState(initialData);
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const availableSuborigins = [...new Set(
-    dashboard.conversionMensual.map((row) => row.suborigen),
-  )].sort((left, right) => left.localeCompare(right, "es"));
-  const [selectedSuborigins, setSelectedSuborigins] = useState<string[]>(availableSuborigins);
+  const availableSuborigins = dashboard.suborigenes;
+  const selectedSuborigins = dashboard.suborigenesSeleccionados;
   const conversionGroups = [...dashboard.conversionMensual.reduce(
     (groups, row) => {
       const rows = groups.get(row.suborigen) ?? [];
@@ -59,32 +57,19 @@ export function PamSummaryDashboard({ initialData }: Props) {
     }),
     { leads: 0, ventas: 0 },
   );
-  const filteredMonthlyTypes = [...dashboard.conversionMensual.reduce(
-    (groups, row) => {
-      if (!selectedSuborigins.includes(row.suborigen)) {
-        return groups;
-      }
-
-      groups.set(row.tipoRegistro, (groups.get(row.tipoRegistro) ?? 0) + row.leads);
-      return groups;
-    },
-    new Map<string, number>(),
-  )]
-    .map(([nombre, total]) => ({ nombre, total }))
-    .sort((left, right) => right.total - left.total || left.nombre.localeCompare(right.nombre, "es"));
-  const filteredMonthlyTotal = filteredMonthlyTypes.reduce((total, item) => total + item.total, 0);
+  const monthlyTotal = dashboard.tiposRegistroMensual.reduce((total, item) => total + item.total, 0);
 
   function toggleSuborigin(suborigin: string) {
-    setSelectedSuborigins((current) =>
-      current.includes(suborigin)
-        ? current.filter((item) => item !== suborigin)
-        : [...current, suborigin].sort((left, right) => left.localeCompare(right, "es")),
-    );
+    const nextSuborigins = selectedSuborigins.includes(suborigin)
+      ? selectedSuborigins.filter((item) => item !== suborigin)
+      : [...selectedSuborigins, suborigin].sort((left, right) => left.localeCompare(right, "es"));
+    applyFilters(dashboard.periodoSeleccionado ?? "", nextSuborigins);
   }
 
   function toggleAllSuborigins() {
-    setSelectedSuborigins((current) =>
-      current.length === availableSuborigins.length ? [] : availableSuborigins,
+    applyFilters(
+      dashboard.periodoSeleccionado ?? "",
+      selectedSuborigins.length === availableSuborigins.length ? [] : availableSuborigins,
     );
   }
 
@@ -96,23 +81,19 @@ export function PamSummaryDashboard({ initialData }: Props) {
     return `${selectedSuborigins.length} suborígenes`;
   }
 
-  function changePeriod(period: string) {
+  function applyFilters(period: string, suborigins: string[]) {
     setError(null);
     startTransition(async () => {
       try {
-        const response = await fetch(
-          `/api/resumen?periodo=${encodeURIComponent(period)}`,
-          { cache: "no-store" },
-        );
+        const params = new URLSearchParams({ periodo: period });
+        if (!suborigins.length) params.append("suborigen", "");
+        for (const suborigin of suborigins) params.append("suborigen", suborigin);
+        const response = await fetch(`/api/resumen?${params}`, { cache: "no-store" });
         if (!response.ok) throw new Error();
 
         const nextDashboard = (await response.json()) as PamSummaryDashboardData;
         setDashboard(nextDashboard);
-        setSelectedSuborigins(
-          [...new Set(nextDashboard.conversionMensual.map((row) => row.suborigen))]
-            .sort((left, right) => left.localeCompare(right, "es")),
-        );
-        window.history.replaceState(null, "", `/resumen?periodo=${encodeURIComponent(period)}`);
+        window.history.replaceState(null, "", `/resumen?${params}`);
       } catch {
         setError("No se pudo actualizar el período. Intente nuevamente.");
       }
@@ -127,22 +108,33 @@ export function PamSummaryDashboard({ initialData }: Props) {
           <h1 id="pam-summary-title">Resumen</h1>
         </div>
 
-        <label className="dashboard-period">
-          <span><CalendarDays aria-hidden="true" /> Mes de referencia</span>
-          <select
-            value={dashboard.periodoSeleccionado ?? ""}
-            onChange={(event) => changePeriod(event.target.value)}
-            disabled={!dashboard.periodos.length || isPending}
-            aria-label="Filtrar resumen por mes y año"
-          >
-            {!dashboard.periodos.length && <option value="">Sin períodos</option>}
-            {dashboard.periodos.map((period) => (
-              <option key={period} value={period}>
-                {formatPeriod(period)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="pam-summary-toolbar__filters">
+          <details className="pam-summary-filter">
+            <summary className="pam-summary-filter__trigger">
+              <span>{getSuboriginFilterLabel()}</span>
+              <ChevronDown aria-hidden="true" />
+            </summary>
+            <div className="pam-summary-filter__menu">
+              <label className="pam-summary-filter__option pam-summary-filter__option--all">
+                <input type="checkbox" checked={availableSuborigins.length > 0 && selectedSuborigins.length === availableSuborigins.length} onChange={toggleAllSuborigins} disabled={isPending} />
+                <span>Todos los suborígenes</span>
+              </label>
+              {availableSuborigins.map((suborigin) => (
+                <label key={suborigin} className="pam-summary-filter__option">
+                  <input type="checkbox" checked={selectedSuborigins.includes(suborigin)} onChange={() => toggleSuborigin(suborigin)} disabled={isPending} />
+                  <span>{suborigin}</span>
+                </label>
+              ))}
+            </div>
+          </details>
+          <label className="dashboard-period">
+            <span><CalendarDays aria-hidden="true" /> Mes de referencia</span>
+            <select value={dashboard.periodoSeleccionado ?? ""} onChange={(event) => applyFilters(event.target.value, selectedSuborigins)} disabled={!dashboard.periodos.length || isPending} aria-label="Filtrar resumen por mes y año">
+              {!dashboard.periodos.length && <option value="">Sin períodos</option>}
+              {dashboard.periodos.map((period) => <option key={period} value={period}>{formatPeriod(period)}</option>)}
+            </select>
+          </label>
+        </div>
       </section>
 
       <section className="dashboard-signal" aria-live="polite">
@@ -184,44 +176,11 @@ export function PamSummaryDashboard({ initialData }: Props) {
               <span>Distribución mensual</span>
               <h2>Oportunidades por tipo de registro</h2>
             </div>
-            <div className="pam-summary-panel__actions">
-              <details className="pam-summary-filter">
-                <summary className="pam-summary-filter__trigger">
-                  <span>{getSuboriginFilterLabel()}</span>
-                  <ChevronDown aria-hidden="true" />
-                </summary>
-                <div className="pam-summary-filter__menu">
-                  <label className="pam-summary-filter__option pam-summary-filter__option--all">
-                    <input
-                      type="checkbox"
-                      checked={
-                        availableSuborigins.length > 0 &&
-                        selectedSuborigins.length === availableSuborigins.length
-                      }
-                      onChange={toggleAllSuborigins}
-                    />
-                    <span>Todos los suborígenes</span>
-                  </label>
-                  {availableSuborigins.map((suborigin) => (
-                    <label key={suborigin} className="pam-summary-filter__option">
-                      <input
-                        type="checkbox"
-                        checked={selectedSuborigins.includes(suborigin)}
-                        onChange={() => toggleSuborigin(suborigin)}
-                      />
-                      <span>{suborigin}</span>
-                    </label>
-                  ))}
-                </div>
-              </details>
-              <span className="dashboard-panel__count">
-                {filteredMonthlyTotal} oportunidades
-              </span>
-            </div>
+            <span className="dashboard-panel__count">{monthlyTotal} oportunidades</span>
           </header>
           <PamRegistryStackedBarChart
             ariaLabel="Gráfico de barras apiladas mensual de oportunidades por tipo de registro"
-            data={filteredMonthlyTypes}
+            data={dashboard.tiposRegistroMensual}
             emptyMessage="No hay oportunidades para este período"
           />
         </article>

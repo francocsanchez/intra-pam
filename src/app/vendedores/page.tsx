@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Search } from "lucide-react";
+import { BarChart3, ChevronLeft, ChevronRight, Search } from "lucide-react";
 import Link from "next/link";
 import { connection } from "next/server";
 
@@ -79,6 +79,7 @@ export default async function VendedoresPage({
                 <th scope="col">Sucursal</th>
                 <th scope="col">Propietario de oportunidad</th>
                 <th scope="col">Estado</th>
+                <th scope="col">Análisis</th>
               </tr>
             </thead>
             <tbody>
@@ -108,6 +109,12 @@ export default async function VendedoresPage({
                       <span aria-hidden="true" />
                       Activo
                     </span>
+                  </td>
+                  <td>
+                    <Link className="seller-analysis-link" href={`/vendedores/${seller.codigo}/analisis`}>
+                      <BarChart3 aria-hidden="true" />
+                      Analizar
+                    </Link>
                   </td>
                 </tr>
               ))}

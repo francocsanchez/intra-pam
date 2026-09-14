@@ -1,5 +1,27 @@
 # Changelog
 
+## 2026-09-14
+
+### Modificado
+
+- `PAM > Resumen` ahora concentra el filtro multiselección de suborígenes junto al mes de referencia. El filtro actualiza la tendencia anual de pre leads, la distribución mensual y la tabla de leads y ventas de toda la vista.
+
+## 2026-08-31
+
+### Agregado
+
+- Tablero individual de análisis de vendedor en `/vendedores/[codigo]/analisis`, accesible desde el listado de Vendedores.
+- Ruta `GET /api/vendedores/[codigo]/analisis?periodo=YYYY-MM` y contrato tipado para consultar operaciones desde SQL Server.
+- Gráficos ECharts de operaciones anuales, radar mensual por familia de auto y actividad diaria del mes seleccionado.
+- Pruebas del contrato de análisis y de validación de la nueva API.
+
+### Modificado
+
+- El desglose mensual del tablero de vendedor ahora usa un gráfico radar por familia de auto y excluye operaciones anuladas (`ope_fecbaj IS NULL`) de todos sus gráficos y períodos.
+- El bloque anual del tablero de vendedor incorpora un gráfico de árbol por familia de auto, con la cantidad de operaciones en cada etiqueta.
+- La línea anual del tablero de vendedor ahora incorpora oportunidades mensuales y la tasa de cierre (`ventas / oportunidades`) del propietario asociado, etiquetada con dos decimales.
+- El gráfico de árbol anual incorpora una rama adicional por modelo dentro de cada familia de auto.
+
 ## 2026-08-28
 
 ### Agregado

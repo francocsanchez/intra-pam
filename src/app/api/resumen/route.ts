@@ -3,6 +3,8 @@ import { isPerformancePeriod } from "../../../lib/rendimiento-contract";
 
 export async function GET(request: Request) {
   const period = new URL(request.url).searchParams.get("periodo");
+  const params = new URL(request.url).searchParams;
+  const suborigins = params.has("suborigen") ? params.getAll("suborigen") : undefined;
 
   if (period && !isPerformancePeriod(period)) {
     return Response.json(
@@ -12,7 +14,7 @@ export async function GET(request: Request) {
   }
 
   try {
-    return Response.json(await getPamSummaryDashboard(period), {
+    return Response.json(await getPamSummaryDashboard(period, suborigins), {
       headers: { "Cache-Control": "no-store, max-age=0" },
     });
   } catch {

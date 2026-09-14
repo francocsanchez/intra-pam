@@ -680,6 +680,34 @@
   height: clamp(22rem, 40vw, 29rem);
   padding: 0.25rem 0.2rem 0.2rem;
 }
+
+.vendor-analysis-page {
+  width: 100%;
+  min-height: calc(100vh - 3.75rem);
+  padding: clamp(1rem, 2.5vw, 2rem);
+  background:
+    linear-gradient(90deg, color-mix(in oklch, var(--surface-subtle), transparent 32%) 1px, transparent 1px),
+    var(--surface-subtle);
+  background-size: 1.5rem 1.5rem;
+}
+
+.vendor-analysis-grid {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 0.7rem;
+}
+
+.vendor-analysis-grid--monthly {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vendor-analysis-grid--annual {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.vendor-analysis-chart {
+  height: clamp(18rem, 28vw, 23rem);
+}
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 
 .status-home {
@@ -982,6 +1010,17 @@
   gap: 0.45rem;
   margin-left: auto;
   flex: none;
+}
+
+.pam-summary-toolbar__filters {
+  display: flex;
+  align-items: end;
+  gap: 0.5rem;
+}
+
+.pam-summary-toolbar__filters .pam-summary-filter__menu {
+  right: auto;
+  left: 0;
 }
 
 .pam-summary-filter {
@@ -1310,6 +1349,29 @@
 .seller-table th:last-child,
 .seller-table td:last-child {
   width: 8rem;
+}
+
+.seller-analysis-link {
+  display: inline-flex;
+  height: 1.9rem;
+  align-items: center;
+  gap: 0.35rem;
+  padding-inline: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 0.75);
+  color: var(--foreground);
+  font-size: 0.66rem;
+  font-weight: 600;
+}
+
+.seller-analysis-link:hover {
+  border-color: var(--primary);
+  background: var(--secondary);
+}
+
+.seller-analysis-link svg {
+  width: 0.78rem;
+  height: 0.78rem;
 }
 
 .seller-code,
@@ -2204,6 +2266,18 @@
 
   .performance-page {
     padding: 0.75rem;
+  }
+
+  .vendor-analysis-page {
+    padding: 0.75rem;
+  }
+
+  .vendor-analysis-grid--monthly {
+    grid-template-columns: 1fr;
+  }
+
+  .vendor-analysis-grid--annual {
+    grid-template-columns: 1fr;
   }
 
   .performance-summary__metrics,

@@ -204,6 +204,8 @@ function buildEmptyPamSummary(periodos: string[], periodoSeleccionado: string | 
     periodos,
     periodoSeleccionado,
     anioSeleccionado,
+    suborigenes: [],
+    suborigenesSeleccionados: [],
     tendenciaAnualPreLeads: anioSeleccionado ? fillAnnualPreLeadTrend(anioSeleccionado, []) : [],
     tendenciaAnualParticipacionDigital: anioSeleccionado
       ? fillAnnualDigitalParticipationTrend(anioSeleccionado, [])
@@ -1504,6 +1506,7 @@ export async function readPerformanceDashboardSnapshot(
 
 export async function readPamSummarySnapshot(
   requestedPeriod?: string | null,
+  requestedSuborigins?: string[] | null,
 ): Promise<PamSummaryDashboard> {
   await ensureAnalyticsTotalsInitialized();
 
@@ -1523,31 +1526,60 @@ export async function readPamSummarySnapshot(
       ? requestedPeriod
       : (periodos[0] ?? null);
 
+  const suborigenes = catalog.suborigenes ?? [];
+  const hasSuboriginFilter = requestedSuborigins !== undefined && requestedSuborigins !== null;
+  const suborigenesSeleccionados = hasSuboriginFilter
+    ? [...new Set(requestedSuborigins.map((value) => value.trim()).filter((value) => suborigenes.includes(value)))]
+    : suborigenes;
+
   if (!periodoSeleccionado) {
-    return buildEmptyPamSummary(periodos, null);
+    return { ...buildEmptyPamSummary(periodos, null), suborigenes, suborigenesSeleccionados };
   }
 
-  const snapshot = await RendimientoTotalizado.findOne({
+  const snapshotFilter = {
     scope: "snapshot",
-    suborigenFiltro: null,
     periodo: periodoSeleccionado,
-  }).lean();
+  };
+  const snapshots = hasSuboriginFilter
+    ? await RendimientoTotalizado.find({
+      ...snapshotFilter,
+      suborigenFiltro: { $in: suborigenesSeleccionados },
+    }).lean()
+    : await RendimientoTotalizado.find({ ...snapshotFilter, suborigenFiltro: null }).lean();
 
-  if (!snapshot) {
-    return buildEmptyPamSummary(periodos, periodoSeleccionado);
+  if (!snapshots.length) {
+    return { ...buildEmptyPamSummary(periodos, periodoSeleccionado), suborigenes, suborigenesSeleccionados };
   }
+
+  const annualByPeriod = new Map<string, Map<string, number>>();
+  const monthlyTypes = new Map<string, number>();
+  const conversionMensual: PamConversionMetric[] = [];
+  for (const snapshot of snapshots) {
+    for (const point of snapshot.tendenciaAnualPreLeads ?? []) {
+      const types = annualByPeriod.get(point.periodo) ?? new Map<string, number>();
+      for (const [tipoRegistro, total] of Object.entries(point.porTipoRegistro ?? {})) {
+        types.set(tipoRegistro, (types.get(tipoRegistro) ?? 0) + Number(total));
+      }
+      annualByPeriod.set(point.periodo, types);
+    }
+    for (const item of snapshot.tiposRegistroMensual ?? []) {
+      monthlyTypes.set(item.nombre, (monthlyTypes.get(item.nombre) ?? 0) + item.total);
+    }
+    conversionMensual.push(...(snapshot.conversionMensual ?? []));
+  }
+  const year = periodoSeleccionado.slice(0, 4);
 
   return {
     periodos,
     periodoSeleccionado,
-    anioSeleccionado: periodoSeleccionado.slice(0, 4),
-    tendenciaAnualPreLeads: snapshot.tendenciaAnualPreLeads ?? fillAnnualPreLeadTrend(periodoSeleccionado.slice(0, 4), []),
-    tendenciaAnualParticipacionDigital:
-      snapshot.tendenciaAnualParticipacionDigital ??
-      fillAnnualDigitalParticipationTrend(periodoSeleccionado.slice(0, 4), []),
-    resumenParticipacionDigital: snapshot.resumenParticipacionDigital ?? [],
-    tiposRegistroMensual: snapshot.tiposRegistroMensual ?? [],
-    conversionMensual: snapshot.conversionMensual ?? [],
+    anioSeleccionado: year,
+    suborigenes,
+    suborigenesSeleccionados,
+    tendenciaAnualPreLeads: fillAnnualPreLeadTrend(year, [...annualByPeriod.entries()].map(([periodo, values]) => ({ periodo, total: [...values.values()].reduce((sum, total) => sum + total, 0), porTipoRegistro: Object.fromEntries(values) }))),
+    tendenciaAnualParticipacionDigital: snapshots[0]?.tendenciaAnualParticipacionDigital ?? fillAnnualDigitalParticipationTrend(year, []),
+    resumenParticipacionDigital: snapshots[0]?.resumenParticipacionDigital ?? [],
+    tiposRegistroMensual: [...monthlyTypes.entries()].map(([nombre, total]) => ({ nombre, total })).sort((left, right) => right.total - left.total || left.nombre.localeCompare(right.nombre, "es")),
+    conversionMensual: conversionMensual.sort((left, right) => left.suborigen.localeCompare(right.suborigen, "es") || left.tipoRegistro.localeCompare(right.tipoRegistro, "es")),
   };
 }
 

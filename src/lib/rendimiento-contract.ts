@@ -90,6 +90,8 @@ export type PamSummaryDashboard = {
   periodos: string[];
   periodoSeleccionado: string | null;
   anioSeleccionado: string | null;
+  suborigenes: string[];
+  suborigenesSeleccionados: string[];
   tendenciaAnualPreLeads: PamAnnualPreLeadPoint[];
   tendenciaAnualParticipacionDigital: PamDigitalParticipationPoint[];
   resumenParticipacionDigital: PamDigitalParticipationSummary[];

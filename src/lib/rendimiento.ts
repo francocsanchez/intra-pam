@@ -283,8 +283,9 @@ export async function getPerformanceDashboard(
 
 export async function getPamSummaryDashboard(
   requestedPeriod?: string | null,
+  requestedSuborigins?: string[] | null,
 ): Promise<PamSummaryDashboard> {
-  return readPamSummarySnapshot(requestedPeriod);
+  return readPamSummarySnapshot(requestedPeriod, requestedSuborigins);
 }
 
 export async function getDigitalParticipationDashboard(

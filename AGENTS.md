@@ -139,6 +139,12 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - El `RootLayout` tolera atributos agregados por extensiones sobre `body` usando `suppressHydrationWarning` para evitar falsos positivos de hidratación en desarrollo.
 - El navbar principal expone Dashboard y Oportunidades como accesos directos, y agrupa Vendedores, Propietarios y Suborígenes dentro del menú desplegable Configuración.
 - `GET /api/vendedores` y `/vendedores` consultan exclusivamente registros con `ven_estado = 1`.
+- Cada vendedor activo tiene un tablero en `/vendedores/{codigo}/analisis`, accesible desde el listado mediante la acción `Analizar`.
+- `GET /api/vendedores/{codigo}/analisis?periodo=YYYY-MM` consulta SQL Server en modo lectura, valida que el vendedor siga activo y cuenta todas las operaciones de `dbo.opera`.
+- El tablero de vendedor muestra la sucursal vigente del maestro `vendedor`, serie anual completa, radar mensual por familia de auto y una serie diaria que incluye días sin operaciones.
+- El bloque anual del tablero de vendedor combina la línea mensual con un gráfico de árbol que desglosa las operaciones anuales por familia y modelo de auto; etiqueta cada nodo como `familia: cantidad` o `modelo: cantidad`.
+- La línea anual del tablero de vendedor agrega barras de oportunidades y tasa de cierre por mes: toma el propietario asociado vigente, cuenta oportunidades por `fechaCreacion` UTC y considera ventas a las etapas `Venta` o `Venta plan`.
+- Todas las consultas del tablero de vendedor excluyen operaciones anuladas mediante `opera.ope_fecbaj IS NULL`; la familia se resuelve con `auto.au_familia = famiauto.fam_codigo`.
 - El listado de vendedores pagina de a 50 registros y permite buscar por codigo, nombre o sucursal.
 - En el esquema SQL real, la relacion de sucursal es `vendedor.ven_sucur = sucursal.suc_codigo`.
 - La relacion se resuelve con `LEFT JOIN` porque existen vendedores activos sin sucursal asociada.
@@ -217,6 +223,7 @@ Usar ademas padding reducido, no quiero separaciones grandes. Las vistas deben s
 - En `PAM > Resumen`, la distribución mensual de oportunidades por `tipoRegistro` se representa con una única barra apilada, mostrando cantidad y porcentaje por segmento.
 - En `PAM > Resumen`, el gráfico mensual de oportunidades admite filtro multiselección por `suborigen` dentro de un dropdown compacto con checkboxes, reutilizando la tabla totalizada mensual del período.
 - En `PAM > Resumen`, el dropdown de `suborigen` debe conservarse visualmente a la izquierda del contador de oportunidades también en anchos reducidos, priorizando una lectura horizontal compacta.
+- En `PAM > Resumen`, el único selector multiselección de suborígenes vive a la izquierda de `Mes de referencia` y actualiza todos los paneles de la vista, incluida la tabla de leads y ventas.
 - En `PAM > Resumen`, la barra apilada de oportunidades debe ocupar todo el alto disponible dentro de su card para evitar espacio vacío y equilibrar visualmente la fila con la tabla comercial.
 - En `PAM > Resumen`, cada `tipoRegistro` debe conservar un color estable y coincidente entre segmento, leyenda, etiqueta y tooltip para evitar ambigüedad visual.
 - En `PAM > Resumen`, la barra apilada mensual debe ocupar aproximadamente el 80% del ancho útil del gráfico y priorizar una paleta con contraste claro entre tipos de registro.
